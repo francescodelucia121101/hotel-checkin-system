@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useReducer } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -8,16 +8,30 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectItem } from "@/components/ui/select";
+import { Modal } from "@/components/ui/modal";
+
+const initialState = { bookings: [], selectedBooking: null, filter: "all" };
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "SET_BOOKINGS":
+      return { ...state, bookings: action.payload };
+    case "SET_SELECTED":
+      return { ...state, selectedBooking: action.payload };
+    case "SET_FILTER":
+      return { ...state, filter: action.payload };
+    default:
+      return state;
+  }
+};
 
 const ManagerBookingCalendar = () => {
-  const [bookings, setBookings] = useState([]);
-  const [filter, setFilter] = useState("all");
-  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
     fetch("/api/bookings")
       .then((res) => res.json())
-      .then((data) => setBookings(data))
+      .then((data) => dispatch({ type: "SET_BOOKINGS", payload: data }))
       .catch((err) => console.error("Errore nel recupero delle prenotazioni", err));
   }, []);
 
@@ -29,13 +43,17 @@ const ManagerBookingCalendar = () => {
     })
       .then((res) => res.json())
       .then((updatedBooking) => {
-        setBookings((prev) => prev.map((b) => (b.id === id ? updatedBooking : b)));
+        dispatch({
+          type: "SET_BOOKINGS",
+          payload: state.bookings.map((b) => (b.id === id ? updatedBooking : b)),
+        });
+        dispatch({ type: "SET_SELECTED", payload: null });
       })
       .catch((err) => console.error("Errore nell'aggiornamento della prenotazione", err));
   };
 
-  const events = bookings
-    .filter((booking) => filter === "all" || booking.checkedIn.toString() === filter)
+  const events = state.bookings
+    .filter((b) => state.filter === "all" || b.checkedIn.toString() === state.filter)
     .map((booking) => ({
       id: booking.id,
       title: `${booking.guestName} - Stanza ${booking.roomNumber}`,
@@ -48,7 +66,7 @@ const ManagerBookingCalendar = () => {
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Calendario Prenotazioni</h2>
       <div className="flex gap-4 mb-4">
-        <Select onChange={(e) => setFilter(e.target.value)}>
+        <Select onChange={(e) => dispatch({ type: "SET_FILTER", payload: e.target.value })}>
           <SelectItem value="all">Tutti</SelectItem>
           <SelectItem value="true">Check-in Effettuato</SelectItem>
           <SelectItem value="false">In Attesa di Check-in</SelectItem>
@@ -59,34 +77,42 @@ const ManagerBookingCalendar = () => {
         initialView="dayGridMonth"
         events={events}
         height={600}
-        eventClick={(info) => setSelectedBooking(bookings.find((b) => b.id == info.event.id))}
+        eventClick={(info) =>
+          dispatch({ type: "SET_SELECTED", payload: state.bookings.find((b) => b.id == info.event.id) })
+        }
       />
 
-      {selectedBooking && (
-        <div className="mt-6 p-4 border rounded-lg shadow-md">
+      {state.selectedBooking && (
+        <Modal onClose={() => dispatch({ type: "SET_SELECTED", payload: null })}>
           <h3 className="text-xl font-semibold">Modifica Prenotazione</h3>
           <Input
             type="text"
-            defaultValue={selectedBooking.guestName}
-            onChange={(e) => setSelectedBooking({ ...selectedBooking, guestName: e.target.value })}
+            defaultValue={state.selectedBooking.guestName}
+            onChange={(e) =>
+              dispatch({ type: "SET_SELECTED", payload: { ...state.selectedBooking, guestName: e.target.value } })
+            }
           />
           <Input
             type="date"
-            defaultValue={selectedBooking.checkinDate}
-            onChange={(e) => setSelectedBooking({ ...selectedBooking, checkinDate: e.target.value })}
+            defaultValue={state.selectedBooking.checkinDate}
+            onChange={(e) =>
+              dispatch({ type: "SET_SELECTED", payload: { ...state.selectedBooking, checkinDate: e.target.value } })
+            }
           />
           <Input
             type="date"
-            defaultValue={selectedBooking.checkoutDate}
-            onChange={(e) => setSelectedBooking({ ...selectedBooking, checkoutDate: e.target.value })}
+            defaultValue={state.selectedBooking.checkoutDate}
+            onChange={(e) =>
+              dispatch({ type: "SET_SELECTED", payload: { ...state.selectedBooking, checkoutDate: e.target.value } })
+            }
           />
-          <Button onClick={() => handleUpdateBooking(selectedBooking.id, selectedBooking)}>Salva</Button>
-        </div>
+          <Button onClick={() => handleUpdateBooking(state.selectedBooking.id, state.selectedBooking)}>Salva</Button>
+        </Modal>
       )}
 
       <h3 className="text-xl font-semibold mt-6">Dettagli Check-in</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-        {bookings.map((booking) => (
+        {state.bookings.map((booking) => (
           <Card key={booking.id} className="p-4">
             <CardContent>
               <p className="text-lg font-semibold">{booking.guestName}</p>
@@ -94,9 +120,14 @@ const ManagerBookingCalendar = () => {
               <p>Check-in: {booking.checkinDate}</p>
               <p>Check-out: {booking.checkoutDate}</p>
               <Badge color={booking.checkedIn ? "green" : "red"}>
-                {booking.checkedIn ? "Check-in effettuato" : "In attesa di check-in"}
+                {booking.checkedIn ? "Check-in effettuato" : "In attesa di Check-in"}
               </Badge>
-              <Button className="mt-2" onClick={() => console.log(`Apertura stanza con Nuki per ${booking.roomNumber}`)}>Apri con Nuki</Button>
+              <Button
+                className="mt-2"
+                onClick={() => console.log(`Apertura stanza con Nuki per ${booking.roomNumber}`)}
+              >
+                Apri con Nuki
+              </Button>
             </CardContent>
           </Card>
         ))}
