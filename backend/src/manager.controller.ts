@@ -1,21 +1,23 @@
-// src/manager.controller.ts
-import { Controller, Get, Param, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, NotFoundException } from '@nestjs/common';
 import { ManagerService } from './manager.service';
-import { Manager } from './manager.entity';
 
 @Controller('manager')
 export class ManagerController {
   constructor(private readonly managerService: ManagerService) {}
 
-  // Rotta per ottenere il Manager
+  // Endpoint per ottenere un manager
   @Get(':id')
-  async getSettings(@Param('id') id: number): Promise<Manager> {
-    return this.managerService.getManager(id);
+  async getManager(@Param('id') id: number) {
+    const manager = await this.managerService.getManager(id);
+    if (!manager) {
+      throw new NotFoundException(`Manager con id ${id} non trovato.`);
+    }
+    return manager;
   }
 
-  // Rotta per creare un nuovo Manager
+  // Endpoint per creare un manager
   @Post()
-  async createSettings(@Body() data: Partial<Manager>): Promise<Manager> {
-    return this.managerService.createManager(data);
+  async createManager(@Body() data: any) {
+    return this.managerService.createManager(data);  // Usa il metodo createManager del servizio
   }
 }
