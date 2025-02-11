@@ -9,6 +9,7 @@ async function bootstrap() {
   // Utilizzo di cookieParser per il parsing dei cookie
   app.use(cookieParser());
 
+
   // Impostazioni di sicurezza per i CORS
   app.enableCors({
     origin: 'http://localhost:3000', // Modifica questo URL in base alle tue necessità
