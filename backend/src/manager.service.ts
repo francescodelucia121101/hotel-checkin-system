@@ -1,3 +1,4 @@
+// src/manager.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -7,31 +8,17 @@ import { Manager } from './manager.entity';
 export class ManagerService {
   constructor(
     @InjectRepository(Manager)
-    private managerRepository: Repository<Manager>,
+    private readonly managerRepository: Repository<Manager>,
   ) {}
 
-  async registerHotel(data: any): Promise<Manager> {
-    const manager = new Manager();
-    manager.hotelName = data.hotelName;
-    manager.managerEmail = data.managerEmail;
-    manager.password = data.password;  // Cripta la password prima di salvarla
-    manager.wubookApiKey = data.wubookApiKey;
-    manager.stripeApiKey = data.stripeApiKey;
-    manager.hikvisionApiKey = data.hikvisionApiKey;
-
-    return await this.managerRepository.save(manager);
+  // Metodo per ottenere il Manager in base all'ID
+  async getManager(id: number): Promise<Manager> {
+    return await this.managerRepository.findOne({ where: { id } });
   }
 
-  async updateSettings(managerId: number, data: any): Promise<Manager> {
-    const manager = await this.managerRepository.findOne(managerId);
-    if (manager) {
-      manager.hotelName = data.hotelName;
-      manager.wubookApiKey = data.wubookApiKey;
-      manager.stripeApiKey = data.stripeApiKey;
-      manager.hikvisionApiKey = data.hikvisionApiKey;
-
-      return await this.managerRepository.save(manager);
-    }
-    throw new Error('Manager non trovato');
+  // Metodo per creare un nuovo Manager
+  async createManager(data: Partial<Manager>): Promise<Manager> {
+    const manager = this.managerRepository.create(data);
+    return await this.managerRepository.save(manager);
   }
 }
