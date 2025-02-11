@@ -15,13 +15,12 @@ export class CheckinService {
   }
 
   async findOne(id: number): Promise<Checkin | null> {
-    // Aggiungiamo l'oggetto di opzioni corretto per la ricerca
     return this.checkinRepository.findOne({ where: { id } });
   }
 
   async create(checkinData: any): Promise<Checkin> {
-    // Creiamo un'istanza dell'entità e la salviamo
+    // Verifica che 'checkinData' sia un oggetto e non un array
     const newCheckin = this.checkinRepository.create(checkinData);
-    return this.checkinRepository.save(newCheckin);  // Salviamo un singolo oggetto, non un array
+    return this.checkinRepository.save(newCheckin);  // Salviamo un singolo oggetto Checkin
   }
 }
