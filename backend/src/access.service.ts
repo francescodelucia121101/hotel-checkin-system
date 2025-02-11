@@ -16,3 +16,4 @@ export class AccessService {
     }
   }
 }
+export class AppService {}
