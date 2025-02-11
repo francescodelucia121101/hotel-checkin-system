@@ -1,10 +1,10 @@
-// src/wubook/wubook.module.ts
 import { Module } from '@nestjs/common';
-import { WubookService } from './wubook.service';  // Assicurati che il servizio esista
-import { WubookController } from './wubook.controller';  // Assicurati che il controller esista
+import { WubookService } from './wubook.service';
+import { WubookController } from './wubook.controller';
 
 @Module({
-  controllers: [WubookController],  // Aggiungi il controller per Wubook
-  providers: [WubookService],  // Aggiungi il servizio per Wubook
+  providers: [WubookService],
+  controllers: [WubookController],
+  exports: [WubookService], // 🔥 Esposto per essere usato in altri moduli
 })
 export class WubookModule {}
