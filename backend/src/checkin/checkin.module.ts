@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CheckinController } from './checkin.controller';
-import { CheckinService } from './checkin.service';
 import { Checkin } from './checkin.entity';
-import { WubookModule } from '../checkin/wubook.module'; // <-- Importa il modulo Wubook
-
-
+import { CheckinService } from './checkin.service';
+import { CheckinController } from './checkin.controller';
+import { WubookModule } from './wubook.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Checkin])], // Aggiunto il repository Checkin
-  providers: [CheckinService],
+  imports: [
+    TypeOrmModule.forFeature([Checkin]),
+    WubookModule, // 🔥 Importa WubookModule per poter usare WubookService
+  ],
   controllers: [CheckinController],
+  providers: [CheckinService],
   exports: [CheckinService],
 })
 export class CheckinModule {}
