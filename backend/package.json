@@ -16,7 +16,7 @@
     "passport-jwt": "^4.0.0",
     "class-validator": "^0.14.0",
     "class-transformer": "^0.4.0",
-    "nestjs-query/packages/core": "^1.0.0"
+    "axios": "^1.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",
