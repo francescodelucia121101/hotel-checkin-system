@@ -13,6 +13,6 @@ import { CheckinModule } from './checkin/checkin.module';  // Assicurati che il 
     CheckinModule,  // Aggiungi il modulo per il check-in
   ],
   controllers: [AppController],  // Controller di base
-  providers: [AppService],       // Servizi di base
+  // providers: [AppService],       // Servizi di base
 })
 export class AppModule {}
