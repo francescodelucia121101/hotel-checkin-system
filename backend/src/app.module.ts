@@ -1,11 +1,10 @@
 // src/app.module.ts
-
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ManagerModule } from './manager/manager.module'; // Modulo del manager
-import { WubookModule } from './wubook/wubook.module'; // Modulo di Wubook
-import { CheckinModule } from './checkin/checkin.module'; // Modulo per il check-in
+import { AppController } from './app.controller';  // Assicurati che il file esista
+import { AppService } from './app.service';  // Assicurati che il file esista
+import { ManagerModule } from './manager/manager.module';  // Assicurati che il modulo esista
+import { WubookModule } from './wubook/wubook.module';  // Assicurati che il modulo esista
+import { CheckinModule } from './checkin/checkin.module';  // Assicurati che il modulo esista
 
 @Module({
   imports: [
