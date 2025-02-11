@@ -12,7 +12,7 @@ export class Manager {
   managerEmail: string;
 
   @Column()
-  password: string;  // Criptare la password in produzione
+  password: string;
 
   @Column()
   wubookApiKey: string;
@@ -22,4 +22,23 @@ export class Manager {
 
   @Column()
   hikvisionApiKey: string;
+
+  // Costruttore per inizializzare le proprietà
+  constructor(
+    id: number,
+    hotelName: string,
+    managerEmail: string,
+    password: string,
+    wubookApiKey: string,
+    stripeApiKey: string,
+    hikvisionApiKey: string,
+  ) {
+    this.id = id;
+    this.hotelName = hotelName;
+    this.managerEmail = managerEmail;
+    this.password = password;
+    this.wubookApiKey = wubookApiKey;
+    this.stripeApiKey = stripeApiKey;
+    this.hikvisionApiKey = hikvisionApiKey;
+  }
 }
