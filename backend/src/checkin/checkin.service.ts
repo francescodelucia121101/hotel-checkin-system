@@ -19,8 +19,10 @@ export class CheckinService {
   }
 
   async create(checkinData: any): Promise<Checkin> {
-    // Verifica che 'checkinData' sia un oggetto e non un array
+    // Creiamo un singolo oggetto 'Checkin' e non un array
     const newCheckin = this.checkinRepository.create(checkinData);
-    return this.checkinRepository.save(newCheckin);  // Salviamo un singolo oggetto Checkin
+
+    // Salviamo il singolo oggetto Checkin
+    return this.checkinRepository.save(newCheckin);  
   }
 }
