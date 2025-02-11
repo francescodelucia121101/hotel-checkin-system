@@ -1,16 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2020",                      // Imposta una versione di ECMAScript moderna
-    "module": "commonjs",                    // Usa il modulo commonjs
-    "declaration": false,                    // Non generare dichiarazioni
-    "sourceMap": true,                       // Abilita i source maps
-    "outDir": "./dist",                      // Cartella di output per i file compilati
-    "rootDir": "./src",                      // Cartella di origine per i file TS
-    "strict": true,                          // Abilita il controllo rigoroso dei tipi
-    "esModuleInterop": true,                 // Abilita l'importazione di moduli CommonJS
-    "experimentalDecorators": true,          // Abilita il supporto per i decoratori
-    "skipLibCheck": true                     // Ignora gli errori di librerie esterne
+    "target": "ES6",
+    "module": "CommonJS",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist"
   },
-  "include": ["src/**/*.ts"],                 // Includi tutti i file TypeScript nella cartella src
-  "exclude": ["node_modules"]                 // Escludi la cartella node_modules
+  "include": ["src/**/*"]
 }
