@@ -67,7 +67,9 @@ const ManagerBookingCalendar = () => {
       <h2 className="text-2xl font-bold mb-4">Calendario Prenotazioni</h2>
       <div className="flex gap-4 mb-4">
         <Select onValueChange={(value) => dispatch({ type: "SET_FILTER", payload: value })}>
-  
+  <SelectTrigger className="w-[180px]">
+    <SelectValue placeholder="Filtra prenotazioni" />
+  </SelectTrigger>
   <SelectContent>
     <SelectGroup>
       <SelectItem value="all">Tutti</SelectItem>
