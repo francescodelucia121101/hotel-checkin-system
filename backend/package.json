@@ -1,0 +1,34 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@nestjs/common": "^9.0.0",
+    "@nestjs/core": "^9.0.0",
+    "@nestjs/platform-express": "^9.0.0",
+    "rxjs": "^7.5.0",
+    "pg": "^8.7.0", 
+    "typeorm": "^0.3.0", 
+    "stripe": "^8.0.0",
+    "bcrypt": "^5.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "passport": "^0.6.0",
+    "passport-jwt": "^4.0.0",
+    "class-validator": "^0.14.0",
+    "class-transformer": "^0.4.0",
+    "nestjs-query/packages/core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^9.0.0",
+    "@nestjs/schematics": "^9.0.0",
+    "typescript": "^4.5.0",
+    "ts-node": "^10.0.0",
+    "tsconfig-paths": "^3.9.0"
+  },
+  "scripts": {
+    "start": "npm run build && node dist/main",
+    "start:dev": "npm run build && node dist/main",
+    "start:prod": "node dist/main",
+    "build": "tsc"
+  }
+}
