@@ -5,6 +5,8 @@ import { AppController } from './app.controller';  // Assicurati che il file esi
 import { ManagerModule } from './manager/manager.module';  // Assicurati che il modulo esista
 import { WubookModule } from './checkin/wubook.module';  // Assicurati che il modulo esista
 import { CheckinModule } from './checkin/checkin.module';  // Assicurati che il modulo esista
+import { TypeOrmModule } from '@nestjs/typeorm';  // Importa TypeOrmModule
+import { Checkin } from './checkin/checkin.entity';  // Importa la tua entità Checkin
 
 @Module({
   imports: [
