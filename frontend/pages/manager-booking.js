@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectItem } from "@/components/ui/select";
 import { Modal } from "@/components/ui/modal";
+import { SelectTrigger } from '@shadcn/ui';
 
 const initialState = { bookings: [], selectedBooking: null, filter: "all" };
 
