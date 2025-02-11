@@ -30,4 +30,7 @@
     "build": "next build",
     "start": "next start"
   }
+  "browser":{
+"child_process": false
+}  
 }
