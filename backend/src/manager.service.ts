@@ -1,24 +1,20 @@
-// src/manager.service.ts
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Manager } from './manager.entity';
+import { ManagerRepository } from './manager.repository'; // Assumendo che tu abbia un repository
 
 @Injectable()
 export class ManagerService {
   constructor(
-    @InjectRepository(Manager)
-    private readonly managerRepository: Repository<Manager>,
+    private readonly managerRepository: ManagerRepository, // Repository di Manager
   ) {}
 
-  // Metodo per ottenere il Manager in base all'ID
-  async getManager(id: number): Promise<Manager> {
-    return await this.managerRepository.findOne({ where: { id } });
-  }
-
-  // Metodo per creare un nuovo Manager
-  async createManager(data: Partial<Manager>): Promise<Manager> {
-    const manager = this.managerRepository.create(data);
-    return await this.managerRepository.save(manager);
+  // Trova un manager per ID, restituendo null se non trovato
+  async getManager(id: number): Promise<Manager | null> {
+    const manager = await this.managerRepository.findOne({ where: { id } });
+    if (!manager) {
+      // Gestisci caso in cui non viene trovato
+      throw new Error(`Manager con id ${id} non trovato.`);
+    }
+    return manager;
   }
 }
