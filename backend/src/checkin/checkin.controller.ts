@@ -1,31 +1,21 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body } from '@nestjs/common';
 import { CheckinService } from './checkin.service';
-import { WubookService } from './wubook.service';
+import { CheckinDto } from './checkin.dto';
+import { Checkin } from './checkin.entity';
 
 @Controller('checkin')
 export class CheckinController {
-  constructor(
-    private readonly checkinService: CheckinService,
-    private readonly wubookService: WubookService,
-  ) {}
+  constructor(private readonly checkinService: CheckinService) {}
 
-  @Get()
-  async getAllCheckins() {
-    return this.checkinService.findAll();
-  }
-
-  @Get(':id')
-  async getCheckin(@Param('id') id: number) {
-    return this.checkinService.findOne(id);
-  }
-
+  // Metodo per creare un nuovo check-in
   @Post()
-  async createCheckin(@Body() checkinData: any) {
+  async create(@Body() checkinData: CheckinDto): Promise<Checkin> {
     return this.checkinService.create(checkinData);
   }
 
-  @Get('wubook/test')
-  async testWubook() {
-    return this.wubookService.someMethod();
+  // Metodo per ottenere un check-in per id
+  @Get(':id')
+  async findOne(@Param('id') id: number): Promise<Checkin | null> {
+    return this.checkinService.findOne(id);
   }
 }
