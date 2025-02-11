@@ -66,11 +66,19 @@ const ManagerBookingCalendar = () => {
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Calendario Prenotazioni</h2>
       <div className="flex gap-4 mb-4">
-        <Select onChange={(e) => dispatch({ type: "SET_FILTER", payload: e.target.value })}>
-          <SelectItem value="all">Tutti</SelectItem>
-          <SelectItem value="true">Check-in Effettuato</SelectItem>
-          <SelectItem value="false">In Attesa di Check-in</SelectItem>
-        </Select>
+        <Select onValueChange={(value) => dispatch({ type: "SET_FILTER", payload: value })}>
+  <SelectTrigger className="w-[180px]">
+    <SelectValue placeholder="Filtra prenotazioni" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectGroup>
+      <SelectItem value="all">Tutti</SelectItem>
+      <SelectItem value="true">Check-in Effettuato</SelectItem>
+      <SelectItem value="false">In Attesa di Check-in</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
+
       </div>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
