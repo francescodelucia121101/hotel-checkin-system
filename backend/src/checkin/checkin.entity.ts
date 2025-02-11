@@ -3,13 +3,11 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity()
 export class Checkin {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;  // TypeORM gestisce automaticamente l'assegnazione di questo valore
 
   @Column()
-  guestName: string;
+  guestName!: string;
 
   @Column()
-  checkinDate: Date;
-
-  // Aggiungi altri campi necessari
+  checkinDate!: Date;
 }
