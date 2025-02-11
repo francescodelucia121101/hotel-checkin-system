@@ -15,4 +15,7 @@ export class WubookService {
     console.log(`Creando una prenotazione per l'hotel con ID: ${hotelId}`);
     return { reservationId: '12345', status: 'confermata' };
   }
+  async someMethod() {
+    return { message: 'Wubook integration test method executed' };
+  }
 }
