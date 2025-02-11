@@ -2,20 +2,17 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class WubookService {
-  // Simuliamo un esempio di interazione con l'API Wubook
-  async getAvailability(hotelId: string): Promise<any> {
-    // Logica per ottenere la disponibilità tramite l'API di Wubook
-    console.log(`Ottenendo la disponibilità per l'hotel con ID: ${hotelId}`);
+  // Metodo per ottenere una prenotazione
+  async getReservation(reservationCode: string): Promise<any> {
+    // Simulazione della logica per ottenere una prenotazione
+    console.log(`Ottenendo i dettagli della prenotazione con codice: ${reservationCode}`);
     // Simulazione della risposta
-    return { availability: 'disponibile' };
+    return { reservationCode, status: 'confermata', guestName: 'John Doe' };
   }
 
+  // Metodo per creare una prenotazione
   async createReservation(hotelId: string, guestData: any): Promise<any> {
-    // Logica per creare una prenotazione tramite l'API di Wubook
     console.log(`Creando una prenotazione per l'hotel con ID: ${hotelId}`);
-    // Simulazione della risposta
     return { reservationId: '12345', status: 'confermata' };
   }
-
-  // Aggiungi qui altri metodi per le funzionalità che desideri implementare
 }
