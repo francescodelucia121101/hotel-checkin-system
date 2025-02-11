@@ -1,13 +1,31 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { CheckinService } from './checkin.service';
 import { WubookService } from './wubook.service';
 
 @Controller('checkin')
 export class CheckinController {
-  constructor(private readonly wubookService: WubookService) {}
+  constructor(
+    private readonly checkinService: CheckinService,
+    private readonly wubookService: WubookService,
+  ) {}
 
-  @Post('reservation')
-  async getReservation(@Body() body: { reservationCode: string }) {
-    const reservation = await this.wubookService.getReservation(body.reservationCode);
-    return reservation;
+  @Get()
+  async getAllCheckins() {
+    return this.checkinService.findAll();
+  }
+
+  @Get(':id')
+  async getCheckin(@Param('id') id: number) {
+    return this.checkinService.findOne(id);
+  }
+
+  @Post()
+  async createCheckin(@Body() checkinData: any) {
+    return this.checkinService.create(checkinData);
+  }
+
+  @Get('wubook/test')
+  async testWubook() {
+    return this.wubookService.someMethod();
   }
 }
