@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
+nimport { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CheckinController } from './checkin.controller';
 import { CheckinService } from './checkin.service';
 import { Checkin } from './checkin.entity';
-import { WubookModule } from '../wubook/wubook.module'; // <-- Importa il modulo Wubook
+import { WubookModule } from '../checkin/wubook.module'; // <-- Importa il modulo Wubook
 
 
 
