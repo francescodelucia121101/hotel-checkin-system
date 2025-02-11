@@ -1,32 +1,34 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Manager } from './manager.entity';
-import { ManagerRepository } from './manager.repository'; // Assicurati che il repository esista e venga importato
+import { ManagerRepository } from './manager.repository';  // Assicurati che il repository esista
 
 @Injectable()
 export class ManagerService {
-  constructor(private readonly managerRepository: ManagerRepository) {}
+  constructor(
+    @InjectRepository(Manager)
+    private readonly managerRepository: ManagerRepository  // Assicurati che il repository esista
+  ) {}
 
-  // Trova un manager per ID, gestendo il caso in cui non esiste
-  async getManager(id: number): Promise<Manager | null> {
-    const manager = await this.managerRepository.findOne({ where: { id } });
-    if (!manager) {
-      return null;
-    }
-    return manager;
-  }
-
-  // Metodo per creare un manager
   async createManager(data: any): Promise<Manager> {
-    const newManager = new Manager();
-    newManager.id = data.id;
-    newManager.hotelName = data.hotelName;
-    newManager.managerEmail = data.managerEmail;
-    newManager.password = data.password;
-    newManager.wubookApiKey = data.wubookApiKey;
-    newManager.stripeApiKey = data.stripeApiKey;
-    newManager.hikvisionApiKey = data.hikvisionApiKey;
+    // Crea una nuova istanza di Manager utilizzando il costruttore
+    const newManager = new Manager(
+      data.id,
+      data.hotelName,
+      data.managerEmail,
+      data.password,
+      data.wubookApiKey,
+      data.stripeApiKey,
+      data.hikvisionApiKey
+    );
 
     // Salva il nuovo manager nel repository (o database)
     return await this.managerRepository.save(newManager);
+  }
+
+  async getManager(id: number): Promise<Manager | null> {
+    // Trova un manager per ID
+    return await this.managerRepository.findOne({ where: { id } });
   }
 }
