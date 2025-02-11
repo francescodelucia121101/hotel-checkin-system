@@ -14,12 +14,14 @@ export class CheckinService {
     return this.checkinRepository.find();
   }
 
-  async findOne(id: number): Promise<Checkin> {
-    return this.checkinRepository.findOne(id); // Metodo per recuperare un singolo check-in
+  async findOne(id: number): Promise<Checkin | null> {
+    // Aggiungiamo l'oggetto di opzioni corretto per la ricerca
+    return this.checkinRepository.findOne({ where: { id } });
   }
 
   async create(checkinData: any): Promise<Checkin> {
+    // Creiamo un'istanza dell'entità e la salviamo
     const newCheckin = this.checkinRepository.create(checkinData);
-    return this.checkinRepository.save(newCheckin); // Metodo per creare un nuovo check-in
+    return this.checkinRepository.save(newCheckin);  // Salviamo un singolo oggetto, non un array
   }
 }
