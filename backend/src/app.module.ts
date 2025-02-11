@@ -1,9 +1,9 @@
 // src/app.module.ts
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';  // Assicurati che il file esista
-import { AppService } from './app.service';  // Assicurati che il file esista
+// import { AppService } from './app.service';  // Assicurati che il file esista
 import { ManagerModule } from './manager/manager.module';  // Assicurati che il modulo esista
-import { WubookModule } from './wubook/wubook.module';  // Assicurati che il modulo esista
+import { WubookModule } from './checkin/wubook.module';  // Assicurati che il modulo esista
 import { CheckinModule } from './checkin/checkin.module';  // Assicurati che il modulo esista
 
 @Module({
