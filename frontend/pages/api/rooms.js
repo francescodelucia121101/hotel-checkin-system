@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       console.log("Body ricevuto:", req.body); // LOG DI DEBUG
       const { structure_id, wubook_api_key } = req.body;
 
-      if (!structure_id || !wubook_api_key) {
+      if (!wubook_api_key) {
         return res.status(400).json({ error: 'Parametri mancanti' });
       }
 
