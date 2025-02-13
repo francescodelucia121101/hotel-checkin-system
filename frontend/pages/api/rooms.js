@@ -1,6 +1,12 @@
 import { Pool } from 'pg';
 import axios from 'axios';
 
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
+
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -9,34 +15,35 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
+async function fetchRoomsFromWubook(apiKey) {
+  try {
+    const response = await axios.post(
+      'https://kapi.wubook.net/ws/reservations/fetch_rooms',
+      {},
+      { headers: { Authorization: `Bearer ${apiKey}` } }
+    );
+
+    return response.data.rooms || [];
+  } catch (error) {
+    console.error('Errore nel recupero delle camere da Wubook:', error.response?.data || error.message);
+    return [];
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      const { structure_id, wubook_user, wubook_password } = req.body;
+      console.log("Body ricevuto:", req.body); // LOG DI DEBUG
+      const { structure_id, wubook_api_key } = req.body;
 
-      if (!structure_id || !wubook_user || !wubook_password) {
-        return res.status(400).json({ error: "Parametri mancanti" });
+      if (!structure_id || !wubook_api_key) {
+        return res.status(400).json({ error: 'Parametri mancanti' });
       }
 
-      const token = await axios.post('https://kapi.wubook.net/acquire_token', {
-        user: wubook_user,
-        password: wubook_password
-      });
-
-      if (!token.data.token) {
-        return res.status(403).json({ error: "Autenticazione Wubook fallita" });
-      }
-
-      const roomsResponse = await axios.post(
-        'https://kapi.wubook.net/fetch_rooms',
-        {},
-        { headers: { Authorization: `Bearer ${token.data.token}` } }
-      );
-
-      const rooms = roomsResponse.data.rooms || [];
+      const rooms = await fetchRoomsFromWubook(wubook_api_key);
 
       if (rooms.length === 0) {
-        return res.status(404).json({ error: "Nessuna camera trovata su Wubook" });
+        return res.status(404).json({ error: 'Nessuna camera trovata su Wubook' });
       }
 
       const client = await pool.connect();
@@ -48,13 +55,12 @@ export default async function handler(req, res) {
       }
       client.release();
 
-      return res.status(201).json({ message: "Camere sincronizzate con successo" });
-
+      return res.status(201).json({ message: 'Camere sincronizzate con successo' });
     } catch (error) {
-      console.error("Errore API rooms:", error);
-      return res.status(500).json({ error: "Errore durante la sincronizzazione delle camere" });
+      console.error('Errore durante la sincronizzazione delle camere:', error);
+      return res.status(500).json({ error: 'Errore durante la sincronizzazione delle camere' });
     }
   } else {
-    return res.status(405).json({ message: "Metodo non consentito" });
+    return res.status(405).json({ message: 'Metodo non consentito' });
   }
 }
