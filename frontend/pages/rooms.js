@@ -14,7 +14,7 @@ export default function Rooms() {
 
   useEffect(() => {
     if (selectedStructure) {
-      fetchRooms(selectedStructure.wubook_key);
+      fetchRooms();
     }
   }, [selectedStructure]);
 
@@ -31,37 +31,24 @@ export default function Rooms() {
     }
   };
 
-  const fetchRooms = async (wubookKey) => {
-    if (!wubookKey) return;
+  const fetchRooms = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post('/api/rooms', {
-        wubook_api_key: wubookKey
-      });
-      if (response.data.rooms && response.data.rooms.length > 0) {
-        setRooms(response.data.rooms);
+      const response = await axios.get('/api/getRooms');
+      console.log("Camere recuperate dal database:", response.data); // DEBUG
+      if (response.data.length > 0) {
+        setRooms(response.data);
       } else {
-        setError('Nessuna camera trovata su Wubook');
+        setError('Nessuna camera trovata nel database');
       }
     } catch (error) {
-      setError('Errore nel recupero delle camere da Wubook');
+      setError('Errore nel recupero delle camere dal database');
       console.error('Errore:', error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
-
-  const fetchRoomsFromDB = async () => {
-  try {
-    const response = await axios.get('/api/getRooms');
-    setRooms(response.data);
-  } catch (error) {
-    console.error('Errore nel recupero delle camere dal database:', error);
-    setError('Errore nel recupero delle camere');
-  }
-};
-
 
   return (
     <div>
@@ -78,8 +65,8 @@ export default function Rooms() {
       {loading && <p>Caricamento...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <ul>
-        {rooms.map((room, index) => (
-          <li key={index}>{room.name}</li>
+        {rooms.map((room) => (
+          <li key={room.id}>{room.name}</li>
         ))}
       </ul>
     </div>
