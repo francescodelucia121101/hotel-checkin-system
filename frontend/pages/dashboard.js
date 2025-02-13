@@ -36,14 +36,17 @@ const fetchBookings = async (structureId, wubookKey) => {
   if (!wubookKey) return;
   setLoading(true);
   try {
-    console.log("Chiamata API per prenotazioni:", { structureId, wubookKey }); // LOG
+    console.log("Chiamata API per prenotazioni:", { structureId, wubookKey });
 
-    await axios.post("/api/bookings", { structure_id: structureId, wubook_api_key: wubookKey });
+    const postResponse = await axios.post("/api/bookings", { structure_id: structureId, wubook_api_key: wubookKey });
+    console.log("Risposta POST bookings:", postResponse.data);
 
     const response = await axios.get(`/api/bookings?structure_id=${structureId}`);
+    console.log("Risposta GET bookings:", response.data);
+
     setBookings(response.data);
   } catch (error) {
-    console.error("Errore nel recupero delle prenotazioni:", error);
+    console.error("Errore nel recupero delle prenotazioni:", error.response?.data || error.message);
   } finally {
     setLoading(false);
   }
