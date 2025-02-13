@@ -52,6 +52,17 @@ export default function Rooms() {
     }
   };
 
+  const fetchRoomsFromDB = async () => {
+  try {
+    const response = await axios.get('/api/getRooms');
+    setRooms(response.data);
+  } catch (error) {
+    console.error('Errore nel recupero delle camere dal database:', error);
+    setError('Errore nel recupero delle camere');
+  }
+};
+
+
   return (
     <div>
       <h1>Gestione Camere</h1>
