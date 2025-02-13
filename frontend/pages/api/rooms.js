@@ -23,12 +23,15 @@ async function fetchRoomsFromWubook(apiKey) {
       { headers: { 'x-api-key': apiKey } }
     );
 
+    console.log("Risposta da Wubook:", response.data); // DEBUG
+
     return response.data.rooms || [];
   } catch (error) {
     console.error('Errore nel recupero delle camere da Wubook:', error.response?.data || error.message);
     return [];
   }
 }
+
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
