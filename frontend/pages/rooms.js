@@ -3,38 +3,50 @@ import axios from 'axios';
 
 export default function Rooms() {
   const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [apiKey, setApiKey] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.post('/api/rooms', {
-          structure_id: 1, // Assicurati che l'ID della struttura sia corretto
-          wubook_user: "VD125",
-          wubook_password: "nqdbb6li"
-        });
-        setRooms(response.data);
-      } catch (error) {
-        console.error('Errore nel recupero delle camere', error);
-        setError('Errore nel recupero delle camere');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchRooms();
   }, []);
 
-  if (loading) return <p>Caricamento...</p>;
-  if (error) return <p>{error}</p>;
+  const fetchRooms = async () => {
+    if (!apiKey) {
+      setError('Inserisci la Wubook API Key');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post('/api/rooms', {
+        wubook_api_key: apiKey
+      });
+      setRooms(response.data.rooms || []);
+    } catch (error) {
+      setError('Errore nel recupero delle camere da Wubook');
+      console.error('Errore:', error.response?.data || error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
       <h1>Gestione Camere</h1>
+      <input 
+        type="text" 
+        placeholder="Inserisci la Wubook API Key" 
+        value={apiKey} 
+        onChange={(e) => setApiKey(e.target.value)} 
+      />
+      <button onClick={fetchRooms} disabled={loading}>
+        {loading ? 'Caricamento...' : 'Recupera Camere'}
+      </button>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <ul>
-        {rooms.map((room) => (
-          <li key={room.id}>{room.name}</li>
+        {rooms.map((room, index) => (
+          <li key={index}>{room.name}</li>
         ))}
       </ul>
     </div>
