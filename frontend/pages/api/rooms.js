@@ -9,47 +9,34 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-async function getWubookToken(username, password) {
-  try {
-    const response = await axios.post('https://kapi.wubook.net/acquire_token', {
-      user: username,
-      password: password
-    });
-
-    return response.data.token || null;
-  } catch (error) {
-    console.error('Errore nell\'acquisizione del token Wubook:', error);
-    return null;
-  }
-}
-
-async function fetchRoomsFromWubook(username, password) {
-  const token = await getWubookToken(username, password);
-  if (!token) return [];
-
-  try {
-    const response = await axios.post(
-      'https://kapi.wubook.net/fetch_rooms',
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    return response.data.rooms || [];
-  } catch (error) {
-    console.error('Errore nel recupero delle camere da Wubook:', error);
-    return [];
-  }
-}
-
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const { structure_id, wubook_user, wubook_password } = req.body;
 
-      const rooms = await fetchRoomsFromWubook(wubook_user, wubook_password);
+      if (!structure_id || !wubook_user || !wubook_password) {
+        return res.status(400).json({ error: "Parametri mancanti" });
+      }
+
+      const token = await axios.post('https://kapi.wubook.net/acquire_token', {
+        user: wubook_user,
+        password: wubook_password
+      });
+
+      if (!token.data.token) {
+        return res.status(403).json({ error: "Autenticazione Wubook fallita" });
+      }
+
+      const roomsResponse = await axios.post(
+        'https://kapi.wubook.net/fetch_rooms',
+        {},
+        { headers: { Authorization: `Bearer ${token.data.token}` } }
+      );
+
+      const rooms = roomsResponse.data.rooms || [];
 
       if (rooms.length === 0) {
-        return res.status(404).json({ error: 'Nessuna camera trovata su Wubook' });
+        return res.status(404).json({ error: "Nessuna camera trovata su Wubook" });
       }
 
       const client = await pool.connect();
@@ -61,12 +48,13 @@ export default async function handler(req, res) {
       }
       client.release();
 
-      return res.status(201).json({ message: 'Camere sincronizzate con successo' });
+      return res.status(201).json({ message: "Camere sincronizzate con successo" });
+
     } catch (error) {
-      console.error('Errore durante la sincronizzazione delle camere:', error);
-      return res.status(500).json({ error: 'Errore durante la sincronizzazione delle camere' });
+      console.error("Errore API rooms:", error);
+      return res.status(500).json({ error: "Errore durante la sincronizzazione delle camere" });
     }
   } else {
-    return res.status(405).json({ message: 'Metodo non consentito' });
+    return res.status(405).json({ message: "Metodo non consentito" });
   }
 }
