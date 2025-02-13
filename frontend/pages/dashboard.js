@@ -1,25 +1,46 @@
-import { useRouter } from 'next/router';
-import { Button, Typography, Container } from '@mui/material';
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function Dashboard() {
-  const router = useRouter();
+  const [tab, setTab] = useState("structure"); // Controllo delle schede
+  const [structures, setStructures] = useState([]);
+  const [selectedStructure, setSelectedStructure] = useState(null);
+
+  useEffect(() => {
+    fetchStructures();
+  }, []);
+
+  const fetchStructures = async () => {
+    try {
+      const response = await axios.get("/api/structures");
+      setStructures(response.data);
+      if (response.data.length > 0) {
+        setSelectedStructure(response.data[0]);
+      }
+    } catch (error) {
+      console.error("Errore nel recupero delle strutture:", error);
+    }
+  };
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom>Dashboard del Manager</Typography>
-      <Typography variant="body1">Benvenuto! Qui puoi gestire la tua struttura.</Typography>
-      <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={() => router.push('/structure')}>
-        Gestione Struttura
-      </Button>
-      <Button variant="contained" color="primary" sx={{ mt: 2, ml: 2 }} onClick={() => router.push('/rooms')}>
-        Gestione Camere
-      </Button>
-      <Button variant="contained" color="primary" sx={{ mt: 2, ml: 2 }} onClick={() => router.push('/doors')}>
-        Gestione Porte
-      </Button>
-      <Button variant="contained" color="primary" sx={{ mt: 2, ml: 2 }} onClick={() => router.push('/integrations')}>
-        Integrazioni Nuki / Hikvision
-      </Button>
-    </Container>
+    <div>
+      <h1>Dashboard Manager</h1>
+
+      {/* Navigazione tra schede */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+        <button onClick={() => setTab("structure")}>Gestione Struttura</button>
+        <button onClick={() => setTab("rooms")} disabled={!selectedStructure}>
+          Gestione Camere
+        </button>
+        <button onClick={() => setTab("doors")} disabled={!selectedStructure}>
+          Gestione Porte
+        </button>
+      </div>
+
+      {/* Contenuti della dashboard */}
+      {tab === "structure" && <StructureConfig onStructureSelect={setSelectedStructure} />}
+      {tab === "rooms" && selectedStructure && <RoomsConfig structure={selectedStructure} />}
+      {tab === "doors" && selectedStructure && <DoorsConfig structure={selectedStructure} />}
+    </div>
   );
 }
