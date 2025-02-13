@@ -25,12 +25,14 @@ async function fetchRoomsFromWubook(apiKey) {
 
     console.log("Risposta da Wubook:", response.data); // DEBUG
 
-    return response.data.rooms || [];
+    // Adattiamo la risposta per ottenere i dati corretti
+    return response.data.data || [];
   } catch (error) {
     console.error('Errore nel recupero delle camere da Wubook:', error.response?.data || error.message);
     return [];
   }
 }
+
 
 
 export default async function handler(req, res) {
