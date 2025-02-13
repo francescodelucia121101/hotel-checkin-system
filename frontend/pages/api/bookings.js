@@ -12,9 +12,19 @@ const pool = new Pool({
 // ✅ Funzione per recuperare le prenotazioni da Wubook
 async function fetchBookingsFromWubook(apiKey) {
   try {
+    const today = new Date().toISOString().split("T")[0]; // Data di oggi
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const endDate = nextMonth.toISOString().split("T")[0]; // Data tra 1 mese
+
+    console.log(`📅 Recupero prenotazioni dal ${today} al ${endDate}`);
+
     const response = await axios.post(
       "https://kapi.wubook.net/kp/reservations/fetch_bookings",
-      {},
+      {
+        from: today, // Data di inizio
+        to: endDate, // Data di fine
+      },
       { headers: { "x-api-key": apiKey } }
     );
 
@@ -26,6 +36,7 @@ async function fetchBookingsFromWubook(apiKey) {
     return [];
   }
 }
+
 
 
 // ✅ API Handler
