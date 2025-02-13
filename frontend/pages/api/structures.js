@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const client = await pool.connect();
-      const result = await client.query('SELECT id, name, api_key FROM structures');
+      const result = await client.query('SELECT id, name, wubook_key FROM structures');
       client.release();
 
       return res.status(200).json(result.rows);
