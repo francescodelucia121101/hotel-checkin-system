@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Button, Select, MenuItem, TextField, FormControl, InputLabel, Box } from "@mui/material";
 import axios from "axios";
 
 export default function DoorsConfig({ structure }) {
@@ -12,37 +13,21 @@ export default function DoorsConfig({ structure }) {
   }, [structure]);
 
   const fetchRooms = async () => {
-    try {
-      const response = await axios.get("/api/getRooms");
-      setRooms(response.data);
-    } catch (error) {
-      console.error("Errore nel recupero delle camere:", error);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!selectedRoom || !integrationType || !apiKey) return;
-    try {
-      await axios.post("/api/doors", { room_id: selectedRoom, integration_type: integrationType, api_key: apiKey });
-    } catch (error) {
-      console.error("Errore nel salvataggio:", error);
-    }
+    const response = await axios.get("/api/getRooms");
+    setRooms(response.data);
   };
 
   return (
-    <div>
+    <Box>
       <h2>Gestione Porte per {structure.name}</h2>
-      <select onChange={(e) => setSelectedRoom(e.target.value)}>
-        {rooms.map((room) => (
-          <option key={room.id} value={room.id}>{room.name}</option>
-        ))}
-      </select>
-      <select onChange={(e) => setIntegrationType(e.target.value)}>
-        <option value="HIKVISION">HIKVISION</option>
-        <option value="NUKI">NUKI</option>
-      </select>
-      <input type="text" placeholder="API Key" onChange={(e) => setApiKey(e.target.value)} />
-      <button onClick={handleSave}>Salva</button>
-    </div>
+      <FormControl fullWidth>
+        <InputLabel>Seleziona Camera</InputLabel>
+        <Select onChange={(e) => setSelectedRoom(e.target.value)}>
+          {rooms.map((room) => (
+            <MenuItem key={room.id} value={room.id}>{room.name}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Box>
   );
 }
