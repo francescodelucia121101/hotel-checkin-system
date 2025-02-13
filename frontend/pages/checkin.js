@@ -1,69 +1,26 @@
-import { useState } from 'react';
+import { useState } from "react";
+import { TextField, Button, Container, Typography } from "@mui/material";
+import axios from "axios";
 
-export default function CheckinPage() {
-  const [guestName, setGuestName] = useState('');
-  const [checkinDate, setCheckinDate] = useState('');
-  const [roomNumber, setRoomNumber] = useState('');
-  const [message, setMessage] = useState('');
+export default function Checkin() {
+  const [guest, setGuest] = useState({ name: "", email: "", document: "" });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const checkinData = { guestName, checkinDate, roomNumber };
+  const handleSubmit = async () => {
     try {
-      const response = await fetch('http://localhost:3000/checkins', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(checkinData),
-      });
-
-      if (response.ok) {
-        setMessage('Check-in registrato con successo!');
-      } else {
-        setMessage('Errore nel registrare il check-in.');
-      }
+      const response = await axios.post("/api/checkin", guest);
+      alert("Check-in completato con successo!");
     } catch (error) {
-      setMessage('Errore di connessione al server.');
+      alert("Errore durante il check-in");
     }
   };
 
   return (
-    <div>
-      <h2>Effettua un Check-in</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Nome Ospite:
-          <input
-            type="text"
-            value={guestName}
-            onChange={(e) => setGuestName(e.target.value)}
-          />
-        </label>
-        <br />
-        <label>
-          Data Check-in:
-          <input
-            type="date"
-            value={checkinDate}
-            onChange={(e) => setCheckinDate(e.target.value)}
-          />
-        </label>
-        <br />
-        <label>
-          Numero Camera:
-          <input
-            type="number"
-            value={roomNumber}
-            onChange={(e) => setRoomNumber(e.target.value)}
-          />
-        </label>
-        <br />
-        <button type="submit">Registrare Check-in</button>
-      </form>
-
-      {message && <p>{message}</p>}
-    </div>
+    <Container maxWidth="sm">
+      <Typography variant="h4">Check-in Online</Typography>
+      <TextField fullWidth label="Nome" onChange={(e) => setGuest({ ...guest, name: e.target.value })} />
+      <TextField fullWidth label="Email" onChange={(e) => setGuest({ ...guest, email: e.target.value })} />
+      <TextField fullWidth label="Documento" onChange={(e) => setGuest({ ...guest, document: e.target.value })} />
+      <Button variant="contained" color="primary" onClick={handleSubmit}>Completa Check-in</Button>
+    </Container>
   );
 }
