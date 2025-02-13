@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react";
-import { Container, Typography, Box, Button } from "@mui/material";
-import StructureSelector from "../components/StructureSelector";
-import BookingsTable from "../components/BookingsTable";
 import axios from "axios";
 
 export default function Dashboard() {
@@ -9,6 +6,7 @@ export default function Dashboard() {
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchStructures();
@@ -28,39 +26,67 @@ export default function Dashboard() {
         setSelectedStructure(response.data[0]);
       }
     } catch (error) {
-      console.error("Errore nel recupero delle strutture:", error);
+      console.error("❌ Errore nel recupero delle strutture:", error);
+      setError("Errore nel recupero delle strutture");
     }
   };
 
-const fetchBookings = async (structureId, wubookKey) => {
-  if (!wubookKey) return;
-  setLoading(true);
-  try {
-    console.log("Chiamata API per prenotazioni:", { structureId, wubookKey });
-
-    const postResponse = await axios.post("/api/bookings", { structure_id: structureId, wubook_api_key: wubookKey });
-    console.log("Risposta POST bookings:", postResponse.data);
-
-    const response = await axios.get(`/api/bookings?structure_id=${structureId}`);
-    console.log("Risposta GET bookings:", response.data);
-
-    setBookings(response.data);
-  } catch (error) {
-    console.error("Errore nel recupero delle prenotazioni:", error.response?.data || error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  const fetchBookings = async (structureId, apiKey) => {
+    try {
+      setLoading(true);
+      await axios.post("/api/bookings", { wubook_api_key: apiKey });
+      const response = await axios.get(`/api/bookings?structure_id=${structureId}`);
+      setBookings(response.data);
+    } catch (error) {
+      console.error("❌ Errore nel recupero delle prenotazioni:", error);
+      setError("Errore nel recupero delle prenotazioni");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <Container maxWidth="xl">
-      <Typography variant="h4">Dashboard Manager</Typography>
-      <StructureSelector structures={structures} onSelect={setSelectedStructure} />
-      <Button variant="contained" color="primary" onClick={() => fetchBookings(selectedStructure.id, selectedStructure.wubook_key)}>
-        Sincronizza Prenotazioni
-      </Button>
-      {loading && <Typography>Caricamento...</Typography>}
-      {selectedStructure && <BookingsTable bookings={bookings} />}
-    </Container>
+    <div>
+      <h1>Dashboard</h1>
+      
+      <label>Seleziona Struttura:</label>
+      <select 
+        onChange={(e) => setSelectedStructure(structures.find(s => s.id === Number(e.target.value)))}
+        value={selectedStructure ? selectedStructure.id : ''}
+      >
+        {structures.map((structure) => (
+          <option key={structure.id} value={structure.id}>{structure.name}</option>
+        ))}
+      </select>
+
+      {loading && <p>Caricamento...</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <h2>Prossime Prenotazioni</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Ospite</th>
+            <th>Email</th>
+            <th>Data Check-in</th>
+            <th>Data Check-out</th>
+            <th>Stato</th>
+            <th>Codice Porta</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bookings.map((booking, index) => (
+            <tr key={index}>
+              <td>{booking.guest_name}</td>
+              <td>{booking.guest_email}</td>
+              <td>{new Date(booking.checkin_date).toLocaleDateString()}</td>
+              <td>{new Date(booking.checkout_date).toLocaleDateString()}</td>
+              <td>{booking.status}</td>
+              <td>{booking.door_code || "N/A"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
