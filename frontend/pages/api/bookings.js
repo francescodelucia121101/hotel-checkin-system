@@ -1,8 +1,11 @@
 import { Pool } from 'pg';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 
-// Configurazione API Next.js
+// Estende dayjs per supportare il parsing di formati personalizzati
+dayjs.extend(customParseFormat);
+
 export const config = {
   api: {
     bodyParser: true,
@@ -29,9 +32,17 @@ async function fetchBookingsFromWubook(apiKey) {
 
     return response.data.data.reservations || [];
   } catch (error) {
-    console.error('Errore nel recupero delle prenotazioni da Wubook:', error.response?.data || error.message);
+    console.error('❌ Errore nel recupero delle prenotazioni da Wubook:', error.response?.data || error.message);
     return [];
   }
+}
+
+// Funzione per convertire date al formato PostgreSQL (YYYY-MM-DD)
+function parseDate(dateString) {
+  if (!dateString) return null; // Se la data è assente, restituisci NULL
+
+  const parsedDate = dayjs(dateString, "DD/MM/YYYY").format("YYYY-MM-DD");
+  return parsedDate === "Invalid Date" ? null : parsedDate;
 }
 
 // API handler per sincronizzare le prenotazioni con il database
@@ -57,16 +68,22 @@ export default async function handler(req, res) {
         const guestEmail = booking.booker_email || "email_sconosciuta@example.com";
         const roomId = booking.rooms[0]?.id_zak_room || null;
         const guestsCount = booking.rooms[0]?.occupancy.adults || 1;
-        const checkinDate = dayjs(booking.rooms[0]?.dfrom, "DD/MM/YYYY").format("YYYY-MM-DD");
-        const checkoutDate = dayjs(booking.rooms[0]?.dto, "DD/MM/YYYY").format("YYYY-MM-DD");
+        const checkinDate = parseDate(booking.rooms[0]?.dfrom);
+        const checkoutDate = parseDate(booking.rooms[0]?.dto);
         const status = booking.status;
         const doorCode = booking.rooms[0]?.door_code || null;
+
+        if (!checkinDate || !checkoutDate) {
+          console.warn(`⚠️ Data non valida per la prenotazione ID ${booking.id}`);
+          continue;
+        }
 
         await client.query(
           `INSERT INTO bookings 
             (wubook_reservation_id, structure_id, room_id, guest_name, guest_email, guests_count, checkin_date, checkout_date, status, door_code) 
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-          ON CONFLICT (wubook_reservation_id) DO UPDATE SET status = EXCLUDED.status, door_code = EXCLUDED.door_code`,
+          ON CONFLICT (wubook_reservation_id) 
+          DO UPDATE SET status = EXCLUDED.status, door_code = EXCLUDED.door_code`,
           [booking.id, 1, roomId, guestName, guestEmail, guestsCount, checkinDate, checkoutDate, status, doorCode]
         );
       }
