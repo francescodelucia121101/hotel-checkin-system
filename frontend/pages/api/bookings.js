@@ -34,14 +34,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Parametri mancanti: API Key e Structure ID obbligatori" });
       }
 
-      // Recupera prenotazioni da Wubook
       const bookings = await fetchBookingsFromWubook(wubook_api_key);
 
       if (bookings.length === 0) {
         return res.status(404).json({ error: "Nessuna prenotazione trovata su Wubook" });
       }
 
-      // Inserisce le prenotazioni nel database
       const client = await pool.connect();
       for (const booking of bookings) {
         await client.query(
@@ -55,9 +53,9 @@ export default async function handler(req, res) {
             booking.guests_count || 1,
             booking.start_date,
             booking.end_date,
-            false, // Check-in non effettuato di default
-            null,  // Codice porta non assegnato di default
-            false, // Tassa di soggiorno non pagata di default
+            false,
+            null,
+            false,
           ]
         );
       }
@@ -69,7 +67,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Errore durante la sincronizzazione delle prenotazioni" });
     }
   } else if (req.method === "GET") {
-    // Recupera prenotazioni dal database
     const { structure_id } = req.query;
 
     if (!structure_id) {
