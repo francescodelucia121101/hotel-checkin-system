@@ -9,12 +9,29 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-async function fetchRoomsFromWubook(apiKey) {
+async function getWubookToken(username, password) {
+  try {
+    const response = await axios.post('https://kapi.wubook.net/acquire_token', {
+      user: username,
+      password: password
+    });
+
+    return response.data.token || null;
+  } catch (error) {
+    console.error('Errore nell\'acquisizione del token Wubook:', error);
+    return null;
+  }
+}
+
+async function fetchRoomsFromWubook(username, password) {
+  const token = await getWubookToken(username, password);
+  if (!token) return [];
+
   try {
     const response = await axios.post(
-      'https://wubook.net/api/get_rooms', 
-      { api_key: apiKey }, 
-      { maxRedirects: 5 } // Segue automaticamente i redirect (301)
+      'https://kapi.wubook.net/fetch_rooms',
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
     return response.data.rooms || [];
@@ -27,10 +44,9 @@ async function fetchRoomsFromWubook(apiKey) {
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      const { structure_id, wubook_api_key } = req.body;
+      const { structure_id, wubook_user, wubook_password } = req.body;
 
-      // Recupero camere da Wubook
-      const rooms = await fetchRoomsFromWubook(wubook_api_key);
+      const rooms = await fetchRoomsFromWubook(wubook_user, wubook_password);
 
       if (rooms.length === 0) {
         return res.status(404).json({ error: 'Nessuna camera trovata su Wubook' });
