@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import axios from 'axios';
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -8,27 +9,46 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
+async function fetchRoomsFromWubook(apiKey) {
+  try {
+    const response = await axios.post(
+      'https://wubook.net/api/get_rooms', 
+      { api_key: apiKey }, 
+      { maxRedirects: 5 } // Segue automaticamente i redirect (301)
+    );
+
+    return response.data.rooms || [];
+  } catch (error) {
+    console.error('Errore nel recupero delle camere da Wubook:', error);
+    return [];
+  }
+}
+
 export default async function handler(req, res) {
-  if (req.method === 'GET') {
+  if (req.method === 'POST') {
     try {
+      const { structure_id, wubook_api_key } = req.body;
+
+      // Recupero camere da Wubook
+      const rooms = await fetchRoomsFromWubook(wubook_api_key);
+
+      if (rooms.length === 0) {
+        return res.status(404).json({ error: 'Nessuna camera trovata su Wubook' });
+      }
+
       const client = await pool.connect();
-      const result = await client.query('SELECT * FROM rooms');
+      for (const room of rooms) {
+        await client.query(
+          'INSERT INTO rooms (name, structure_id) VALUES ($1, $2) ON CONFLICT (name, structure_id) DO NOTHING',
+          [room.name, structure_id]
+        );
+      }
       client.release();
-      return res.status(200).json(result.rows);
+
+      return res.status(201).json({ message: 'Camere sincronizzate con successo' });
     } catch (error) {
-      console.error('Errore nel recupero delle camere:', error);
-      return res.status(500).json({ error: 'Errore nel recupero delle camere' });
-    }
-  } else if (req.method === 'POST') {
-    try {
-      const { name, structure_id } = req.body;
-      const client = await pool.connect();
-      await client.query('INSERT INTO rooms (name, structure_id) VALUES ($1, $2)', [name, structure_id]);
-      client.release();
-      return res.status(201).json({ message: 'Camera aggiunta con successo' });
-    } catch (error) {
-      console.error('Errore durante la creazione della camera:', error);
-      return res.status(500).json({ error: 'Errore durante la creazione della camera' });
+      console.error('Errore durante la sincronizzazione delle camere:', error);
+      return res.status(500).json({ error: 'Errore durante la sincronizzazione delle camere' });
     }
   } else {
     return res.status(405).json({ message: 'Metodo non consentito' });
