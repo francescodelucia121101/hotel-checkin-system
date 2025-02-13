@@ -1,94 +1,70 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/router';
+import { Button, TextField, Card, CardContent, Typography, CircularProgress } from '@mui/material';
+import axios from 'axios';
 
-const ManagerRegisterPage = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
+export default function ManagerRegistration() {
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const router = useRouter();
 
-  const onSubmit = async (data) => {
-    setIsLoading(true);
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch('/api/manager/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        setMessage('Registrazione completata con successo!');
-      } else {
-        setMessage(result.message || 'Si è verificato un errore');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setMessage('Errore nella registrazione');
+      await axios.post('/api/register', form);
+      router.push('/login');
+    } catch (err) {
+      setError('Errore nella registrazione');
     }
-    setIsLoading(false);
+    setLoading(false);
   };
 
   return (
-    <div className="container">
-      <h1>Registrazione Manager Hotel</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <input
-          type="text"
-          {...register('hotelName', { required: true })}
-          placeholder="Nome dell'Hotel"
-          className="input"
-        />
-        {errors.hotelName && <span>Nome dell'hotel è obbligatorio</span>}
-
-        <input
-          type="email"
-          {...register('managerEmail', { required: true })}
-          placeholder="Email del Manager"
-          className="input"
-        />
-        {errors.managerEmail && <span>Email è obbligatoria</span>}
-
-        <input
-          type="password"
-          {...register('password', { required: true })}
-          placeholder="Password"
-          className="input"
-        />
-        {errors.password && <span>La password è obbligatoria</span>}
-
-        <input
-          type="text"
-          {...register('wubookApiKey', { required: true })}
-          placeholder="Wubook API Key"
-          className="input"
-        />
-        {errors.wubookApiKey && <span>API Key di Wubook è obbligatoria</span>}
-
-        <input
-          type="text"
-          {...register('stripeApiKey', { required: true })}
-          placeholder="Stripe API Key"
-          className="input"
-        />
-        {errors.stripeApiKey && <span>API Key di Stripe è obbligatoria</span>}
-
-        <input
-          type="text"
-          {...register('hikvisionApiKey', { required: true })}
-          placeholder="HIKVISION API Key"
-          className="input"
-        />
-        {errors.hikvisionApiKey && <span>API Key di HIKVISION è obbligatoria</span>}
-
-        <button type="submit" className="btn" disabled={isLoading}>
-          {isLoading ? 'Registrazione in corso...' : 'Registrati'}
-        </button>
-      </form>
-
-      {message && <div className="message">{message}</div>}
-    </div>
+    <Card sx={{ maxWidth: 400, margin: 'auto', marginTop: 10, padding: 3 }}>
+      <CardContent>
+        <Typography variant="h5" textAlign="center" gutterBottom>
+          Registrazione Manager
+        </Typography>
+        {error && <Typography color="error">{error}</Typography>}
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Nome"
+            name="name"
+            fullWidth
+            margin="normal"
+            onChange={handleChange}
+            required
+          />
+          <TextField
+            label="Email"
+            name="email"
+            type="email"
+            fullWidth
+            margin="normal"
+            onChange={handleChange}
+            required
+          />
+          <TextField
+            label="Password"
+            name="password"
+            type="password"
+            fullWidth
+            margin="normal"
+            onChange={handleChange}
+            required
+          />
+          <Button type="submit" fullWidth variant="contained" color="primary" sx={{ mt: 2 }}>
+            {loading ? <CircularProgress size={24} /> : 'Registrati'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
-};
-
-export default ManagerRegisterPage;
+}
