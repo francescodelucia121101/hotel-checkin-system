@@ -14,7 +14,7 @@ export default function ManagerBooking() {
       const data = await res.json();
       setOutput(data.output);
     } catch (error) {
-      setOutput('Errore nell'esecuzione del comando');
+      setOutput('Errore nell\'esecuzione del comando');
     } finally {
       setLoading(false);
     }
