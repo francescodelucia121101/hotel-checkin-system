@@ -20,10 +20,12 @@ async function fetchBookingsFromWubook(apiKey) {
     console.log(`📅 Recupero prenotazioni dal ${today} al ${endDate}`);
 
     const response = await axios.post(
-      "https://kapi.wubook.net/kp/reservations/fetch_bookings",
+      "https://kapi.wubook.net/kp/reservations/fetch_reservations",
       {
         from: today, // Data di inizio
         to: endDate, // Data di fine
+        include_guests: true, // Includi informazioni sugli ospiti
+        mode: "all" // Recupera tutte le prenotazioni
       },
       { headers: { "x-api-key": apiKey } }
     );
@@ -36,8 +38,6 @@ async function fetchBookingsFromWubook(apiKey) {
     return [];
   }
 }
-
-
 
 // ✅ API Handler
 export default async function handler(req, res) {
@@ -65,11 +65,11 @@ export default async function handler(req, res) {
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
            ON CONFLICT (guest_email, start_date) DO NOTHING`,
           [
-            booking.guest_name || "Ospite sconosciuto",
-            booking.guest_email || "email@sconosciuta.com",
-            booking.guests_count || 1,
-            booking.start_date,
-            booking.end_date,
+            booking.guest.name || "Ospite sconosciuto",
+            booking.guest.email || "email@sconosciuta.com",
+            booking.guests || 1,
+            booking.date_arrival,
+            booking.date_departure,
             false,
             null,
             false,
