@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Button, List, ListItem, CircularProgress, Box } from "@mui/material";
 import axios from "axios";
 
 export default function RoomsConfig({ structure }) {
@@ -31,14 +32,16 @@ export default function RoomsConfig({ structure }) {
   };
 
   return (
-    <div>
+    <Box sx={{ textAlign: "center" }}>
       <h2>Gestione Camere per {structure.name}</h2>
-      <button onClick={syncRooms} disabled={loading}>{loading ? "Sincronizzazione..." : "Sincronizza Camere"}</button>
-      <ul>
+      <Button variant="contained" onClick={syncRooms} disabled={loading}>
+        {loading ? <CircularProgress size={24} /> : "Sincronizza Camere"}
+      </Button>
+      <List>
         {rooms.map((room) => (
-          <li key={room.id}>{room.name}</li>
+          <ListItem key={room.id}>{room.name}</ListItem>
         ))}
-      </ul>
-    </div>
+      </List>
+    </Box>
   );
 }
