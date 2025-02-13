@@ -9,27 +9,25 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-const fetchBookings = async (wubookKey) => {
-  if (!wubookKey) return;
-  setLoading(true);
+// ✅ Funzione per recuperare le prenotazioni da Wubook
+async function fetchBookingsFromWubook(apiKey) {
   try {
-    console.log("Chiamata API per prenotazioni con API Key:", wubookKey);
+    const response = await axios.post(
+      "https://kapi.wubook.net/kp/reservations/fetch_bookings",
+      {}, // Corpo vuoto per Wubook
+      { headers: { "x-api-key": apiKey } }
+    );
 
-    const postResponse = await axios.post("http://141.94.22.211:3000/api/bookings", { wubook_api_key: wubookKey });
-    console.log("Risposta POST bookings:", postResponse.data);
+    console.log("Risposta da Wubook:", response.data); // LOG per debug
 
-    const response = await axios.get("http://141.94.22.211:3000/api/bookings");
-    console.log("Risposta GET bookings:", response.data);
-
-    setBookings(response.data);
+    return response.data.reservations || [];
   } catch (error) {
-    console.error("Errore nel recupero delle prenotazioni:", error.response?.data || error.message);
-  } finally {
-    setLoading(false);
+    console.error("Errore nel recupero delle prenotazioni da Wubook:", error.response?.data || error.message);
+    return [];
   }
-};
+}
 
-
+// ✅ API Handler
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
@@ -40,12 +38,14 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "API Key obbligatoria" });
       }
 
+      // ✅ Recupero prenotazioni da Wubook
       const bookings = await fetchBookingsFromWubook(wubook_api_key);
 
       if (bookings.length === 0) {
         return res.status(404).json({ error: "Nessuna prenotazione trovata su Wubook" });
       }
 
+      // ✅ Salva nel database
       const client = await pool.connect();
       for (const booking of bookings) {
         await client.query(
