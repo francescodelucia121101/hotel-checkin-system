@@ -14,18 +14,19 @@ async function fetchBookingsFromWubook(apiKey) {
   try {
     const response = await axios.post(
       "https://kapi.wubook.net/kp/reservations/fetch_bookings",
-      {}, // Corpo vuoto per Wubook
+      {},
       { headers: { "x-api-key": apiKey } }
     );
 
-    console.log("Risposta da Wubook:", response.data); // LOG per debug
+    console.log("📌 Risposta da Wubook:", JSON.stringify(response.data, null, 2));
 
     return response.data.reservations || [];
   } catch (error) {
-    console.error("Errore nel recupero delle prenotazioni da Wubook:", error.response?.data || error.message);
+    console.error("❌ Errore nel recupero delle prenotazioni da Wubook:", error.response?.data || error.message);
     return [];
   }
 }
+
 
 // ✅ API Handler
 export default async function handler(req, res) {
