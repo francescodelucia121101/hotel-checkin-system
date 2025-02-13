@@ -14,7 +14,7 @@ export default function Rooms() {
 
   useEffect(() => {
     if (selectedStructure) {
-      fetchRooms(selectedStructure.api_key);
+      fetchRooms(selectedStructure.wubook_key);
     }
   }, [selectedStructure]);
 
@@ -31,13 +31,13 @@ export default function Rooms() {
     }
   };
 
-  const fetchRooms = async (apiKey) => {
-    if (!apiKey) return;
+  const fetchRooms = async (wubookKey) => {
+    if (!wubookKey) return;
     setLoading(true);
     setError(null);
     try {
       const response = await axios.post('/api/rooms', {
-        wubook_api_key: apiKey
+        wubook_api_key: wubookKey
       });
       if (response.data.rooms && response.data.rooms.length > 0) {
         setRooms(response.data.rooms);
