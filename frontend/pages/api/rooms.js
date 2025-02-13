@@ -18,9 +18,9 @@ const pool = new Pool({
 async function fetchRoomsFromWubook(apiKey) {
   try {
     const response = await axios.post(
-      'https://kapi.wubook.net/ws/reservations/fetch_rooms',
+      'https://kapi.wubook.net/kp/property/fetch_rooms',
       {},
-      { headers: { Authorization: `Bearer ${apiKey}` } }
+      { headers: { 'x-api-key': apiKey } }
     );
 
     return response.data.rooms || [];
