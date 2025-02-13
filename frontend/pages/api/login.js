@@ -1,6 +1,6 @@
 import { serialize } from 'cookie';
 import { Pool } from 'pg';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const pool = new Pool({
   user: process.env.DB_USER,
