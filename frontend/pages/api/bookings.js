@@ -17,7 +17,9 @@ async function fetchBookingsFromWubook(apiKey) {
       { headers: { "x-api-key": apiKey } }
     );
 
-    return response.data.bookings || [];
+    console.log("Risposta da Wubook:", response.data); // LOG
+
+    return response.data.reservations || [];
   } catch (error) {
     console.error("Errore nel recupero delle prenotazioni da Wubook:", error.response?.data || error.message);
     return [];
@@ -28,10 +30,10 @@ export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
       console.log("Body ricevuto:", req.body);
-      const { structure_id, wubook_api_key } = req.body;
+      const { wubook_api_key } = req.body;
 
-      if (!wubook_api_key || !structure_id) {
-        return res.status(400).json({ error: "Parametri mancanti: API Key e Structure ID obbligatori" });
+      if (!wubook_api_key) {
+        return res.status(400).json({ error: "API Key obbligatoria" });
       }
 
       const bookings = await fetchBookingsFromWubook(wubook_api_key);
@@ -43,11 +45,10 @@ export default async function handler(req, res) {
       const client = await pool.connect();
       for (const booking of bookings) {
         await client.query(
-          `INSERT INTO bookings (structure_id, guest_name, guest_email, guests_count, start_date, end_date, checked_in, door_code, tax_paid)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          `INSERT INTO bookings (guest_name, guest_email, guests_count, start_date, end_date, checked_in, door_code, tax_paid)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
            ON CONFLICT (guest_email, start_date) DO NOTHING`,
           [
-            structure_id,
             booking.guest_name || "Ospite sconosciuto",
             booking.guest_email || "email@sconosciuta.com",
             booking.guests_count || 1,
@@ -67,17 +68,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Errore durante la sincronizzazione delle prenotazioni" });
     }
   } else if (req.method === "GET") {
-    const { structure_id } = req.query;
-
-    if (!structure_id) {
-      return res.status(400).json({ error: "Structure ID obbligatorio" });
-    }
-
     try {
-      const result = await pool.query(
-        "SELECT * FROM bookings WHERE structure_id = $1 ORDER BY start_date ASC",
-        [structure_id]
-      );
+      const result = await pool.query("SELECT * FROM bookings ORDER BY start_date ASC");
       res.status(200).json(result.rows);
     } catch (error) {
       console.error("Errore nel recupero delle prenotazioni:", error);
