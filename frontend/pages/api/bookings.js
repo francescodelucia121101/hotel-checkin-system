@@ -16,6 +16,13 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
+// Funzione per convertire le date da "dd/MM/yyyy" a "YYYY-MM-DD"
+const convertDate = (dateString) => {
+  if (!dateString) return null;
+  const [day, month, year] = dateString.split('/');
+  return `${year}-${month}-${day}`;
+};
+
 // Funzione per recuperare prenotazioni da Wubook
 async function fetchBookingsFromWubook(apiKey) {
   try {
@@ -59,11 +66,16 @@ export default async function handler(req, res) {
         const guestName = booking.id_human || "Ospite Sconosciuto";
         const guestEmail = "email_sconosciuta@example.com";
         const roomId = booking.rooms[0]?.id_zak_room || null;
-        const checkinDate = new Date(booking.rooms[0]?.dfrom);
-        const checkoutDate = new Date(booking.rooms[0]?.dto);
+        const checkinDate = convertDate(booking.rooms[0]?.dfrom); // Convertiamo la data
+        const checkoutDate = convertDate(booking.rooms[0]?.dto); // Convertiamo la data
         const status = booking.status || "Confirmed";
         const guestsCount = booking.rooms[0]?.occupancy?.adults || 1;
         const doorCode = booking.rooms[0]?.door_code || null;
+
+        if (!checkinDate || !checkoutDate) {
+          console.error("❌ Data non valida per la prenotazione:", booking);
+          continue; // Saltiamo questa prenotazione se la data è errata
+        }
 
         await client.query(
           `INSERT INTO bookings 
