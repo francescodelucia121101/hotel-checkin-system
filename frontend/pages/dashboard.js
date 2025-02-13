@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import StructureConfig from "../components/StructureConfig";
+import RoomsConfig from "../components/RoomsConfig";
+import DoorsConfig from "../components/DoorsConfig";
+
 
 export default function Dashboard() {
   const [tab, setTab] = useState("structure"); // Controllo delle schede
