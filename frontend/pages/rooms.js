@@ -11,8 +11,8 @@ export default function Rooms() {
       try {
         const response = await axios.post('/api/rooms', {
           structure_id: 1, // Assicurati che l'ID della struttura sia corretto
-          wubook_user: "USERNAME_WUBOOK",
-          wubook_password: "PASSWORD_WUBOOK"
+          wubook_user: "VD125",
+          wubook_password: "nqdbb6li"
         });
         setRooms(response.data);
       } catch (error) {
