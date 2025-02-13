@@ -9,22 +9,26 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-async function fetchBookingsFromWubook(apiKey) {
+const fetchBookings = async (wubookKey) => {
+  if (!wubookKey) return;
+  setLoading(true);
   try {
-    const response = await axios.post(
-      "https://kapi.wubook.net/kp/reservations/fetch_bookings",
-      {},
-      { headers: { "x-api-key": apiKey } }
-    );
+    console.log("Chiamata API per prenotazioni con API Key:", wubookKey);
 
-    console.log("Risposta da Wubook:", response.data); // LOG
+    const postResponse = await axios.post("http://141.94.22.211:3000/api/bookings", { wubook_api_key: wubookKey });
+    console.log("Risposta POST bookings:", postResponse.data);
 
-    return response.data.reservations || [];
+    const response = await axios.get("http://141.94.22.211:3000/api/bookings");
+    console.log("Risposta GET bookings:", response.data);
+
+    setBookings(response.data);
   } catch (error) {
-    console.error("Errore nel recupero delle prenotazioni da Wubook:", error.response?.data || error.message);
-    return [];
+    console.error("Errore nel recupero delle prenotazioni:", error.response?.data || error.message);
+  } finally {
+    setLoading(false);
   }
-}
+};
+
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
