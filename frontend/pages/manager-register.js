@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { Button, TextField, Card, CardContent, Typography, CircularProgress } from '@mui/material';
+import { Button, TextField, Card, CardContent, Typography, CircularProgress, Container } from '@mui/material';
 import axios from 'axios';
 
 export default function ManagerRegistration() {
@@ -34,37 +34,29 @@ export default function ManagerRegistration() {
         </Typography>
         {error && <Typography color="error">{error}</Typography>}
         <form onSubmit={handleSubmit}>
-          <TextField
-            label="Nome"
-            name="name"
-            fullWidth
-            margin="normal"
-            onChange={handleChange}
-            required
-          />
-          <TextField
-            label="Email"
-            name="email"
-            type="email"
-            fullWidth
-            margin="normal"
-            onChange={handleChange}
-            required
-          />
-          <TextField
-            label="Password"
-            name="password"
-            type="password"
-            fullWidth
-            margin="normal"
-            onChange={handleChange}
-            required
-          />
+          <TextField label="Nome" name="name" fullWidth margin="normal" onChange={handleChange} required />
+          <TextField label="Email" name="email" type="email" fullWidth margin="normal" onChange={handleChange} required />
+          <TextField label="Password" name="password" type="password" fullWidth margin="normal" onChange={handleChange} required />
           <Button type="submit" fullWidth variant="contained" color="primary" sx={{ mt: 2 }}>
             {loading ? <CircularProgress size={24} /> : 'Registrati'}
           </Button>
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+// Dashboard Manager con gestione struttura, camere, porte e integrazioni
+export function ManagerDashboard() {
+  return (
+    <Container>
+      <Typography variant="h4">Dashboard Manager</Typography>
+      <Typography variant="body1">Gestisci la tua struttura e le integrazioni.</Typography>
+      <Button variant="contained" color="secondary" sx={{ mt: 2 }} onClick={() => console.log('Gestione Struttura')}>Gestione Struttura</Button>
+      <Button variant="contained" color="secondary" sx={{ mt: 2, ml: 2 }} onClick={() => console.log('Gestione Camere')}>Gestione Camere</Button>
+      <Button variant="contained" color="secondary" sx={{ mt: 2, ml: 2 }} onClick={() => console.log('Gestione Porte')}>Gestione Porte</Button>
+      <Button variant="contained" color="secondary" sx={{ mt: 2, ml: 2 }} onClick={() => console.log('Integrazione Nuki')}>Integrazione Nuki</Button>
+      <Button variant="contained" color="secondary" sx={{ mt: 2, ml: 2 }} onClick={() => console.log('Integrazione Hikvision')}>Integrazione Hikvision</Button>
+    </Container>
   );
 }
