@@ -51,14 +51,14 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: 'Nessuna camera trovata su Wubook' });
       }
 
-      const client = await pool.connect();
-      for (const room of rooms) {
-        await client.query(
-          'INSERT INTO rooms (name, structure_id) VALUES ($1, $2) ON CONFLICT (name, structure_id) DO NOTHING',
-          [room.name, structure_id]
-        );
-      }
-      client.release();
+const client = await pool.connect();
+for (const room of rooms) {
+  await client.query(
+    'INSERT INTO rooms (id, name, structure_id) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING',
+    [room.id, room.name, structure_id]
+  );
+}
+client.release();
 
       return res.status(201).json({ message: 'Camere sincronizzate con successo' });
     } catch (error) {
