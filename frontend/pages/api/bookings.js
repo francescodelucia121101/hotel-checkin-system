@@ -37,10 +37,9 @@ async function fetchBookingsFromWubook(apiKey) {
   }
 }
 
-// Funzione per convertire date al formato PostgreSQL (YYYY-MM-DD)
+// Funzione per convertire le date al formato PostgreSQL (YYYY-MM-DD)
 function parseDate(dateString) {
-  if (!dateString) return null; // Se la data è assente, restituisci NULL
-
+  if (!dateString) return null;
   const parsedDate = dayjs(dateString, "DD/MM/YYYY").format("YYYY-MM-DD");
   return parsedDate === "Invalid Date" ? null : parsedDate;
 }
@@ -50,10 +49,10 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       console.log("📌 Body ricevuto:", req.body);
-      const { wubook_api_key } = req.body;
+      const { structure_id, wubook_api_key } = req.body;
 
-      if (!wubook_api_key) {
-        return res.status(400).json({ error: 'API Key di Wubook mancante' });
+      if (!wubook_api_key || !structure_id) {
+        return res.status(400).json({ error: 'API Key di Wubook o structure_id mancante' });
       }
 
       const bookings = await fetchBookingsFromWubook(wubook_api_key);
@@ -73,18 +72,22 @@ export default async function handler(req, res) {
         const status = booking.status;
         const doorCode = booking.rooms[0]?.door_code || null;
 
-        if (!checkinDate || !checkoutDate) {
+        // Imposta start_date ed end_date uguali a checkin_date e checkout_date
+        const startDate = checkinDate || dayjs().format("YYYY-MM-DD");
+        const endDate = checkoutDate || dayjs().add(1, 'day').format("YYYY-MM-DD");
+
+        if (!startDate || !endDate) {
           console.warn(`⚠️ Data non valida per la prenotazione ID ${booking.id}`);
           continue;
         }
 
         await client.query(
           `INSERT INTO bookings 
-            (wubook_reservation_id, structure_id, room_id, guest_name, guest_email, guests_count, checkin_date, checkout_date, status, door_code) 
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            (wubook_reservation_id, structure_id, room_id, guest_name, guest_email, guests_count, checkin_date, checkout_date, start_date, end_date, status, door_code) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
           ON CONFLICT (wubook_reservation_id) 
           DO UPDATE SET status = EXCLUDED.status, door_code = EXCLUDED.door_code`,
-          [booking.id, 1, roomId, guestName, guestEmail, guestsCount, checkinDate, checkoutDate, status, doorCode]
+          [booking.id, structure_id, roomId, guestName, guestEmail, guestsCount, checkinDate, checkoutDate, startDate, endDate, status, doorCode]
         );
       }
       client.release();
