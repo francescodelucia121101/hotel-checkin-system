@@ -32,19 +32,22 @@ export default function Dashboard() {
     }
   };
 
-  const fetchBookings = async (structureId, wubookKey) => {
-    if (!wubookKey) return;
-    setLoading(true);
-    try {
-      await axios.post("/api/bookings", { structure_id: structureId, wubook_api_key: wubookKey });
-      const response = await axios.get(`/api/bookings?structure_id=${structureId}`);
-      setBookings(response.data);
-    } catch (error) {
-      console.error("Errore nel recupero delle prenotazioni:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchBookings = async (structureId, wubookKey) => {
+  if (!wubookKey) return;
+  setLoading(true);
+  try {
+    console.log("Chiamata API per prenotazioni:", { structureId, wubookKey }); // LOG
+
+    await axios.post("/api/bookings", { structure_id: structureId, wubook_api_key: wubookKey });
+
+    const response = await axios.get(`/api/bookings?structure_id=${structureId}`);
+    setBookings(response.data);
+  } catch (error) {
+    console.error("Errore nel recupero delle prenotazioni:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Container maxWidth="xl">
