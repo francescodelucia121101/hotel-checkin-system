@@ -9,47 +9,49 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
+async function fetchRoomsFromWubook(wubookApiKey) {
+  try {
+    const response = await axios.post('https://wubook.net/api/get_rooms', {
+      api_key: wubookApiKey,
+    });
+
+    return response.data.rooms || [];
+  } catch (error) {
+    console.error('Errore nel recupero delle camere da Wubook:', error);
+    return [];
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const client = await pool.connect();
-      const result = await client.query('SELECT * FROM checkins');
+      const result = await client.query('SELECT * FROM rooms');
       client.release();
       return res.status(200).json(result.rows);
     } catch (error) {
-      console.error('Errore nel recupero dei check-in:', error);
-      return res.status(500).json({ error: 'Errore nel recupero dei check-in' });
+      console.error('Errore nel recupero delle camere:', error);
+      return res.status(500).json({ error: 'Errore nel recupero delle camere' });
     }
   } else if (req.method === 'POST') {
     try {
-      const { booking_id, signed_document } = req.body;
-      const client = await pool.connect();
-      await client.query(
-        'INSERT INTO checkins (booking_id, signed_document, checkin_time) VALUES ($1, $2, NOW())',
-        [booking_id, signed_document]
-      );
-      client.release();
-      return res.status(201).json({ message: 'Check-in registrato con successo' });
-    } catch (error) {
-      console.error('Errore durante il check-in:', error);
-      return res.status(500).json({ error: 'Errore durante il check-in' });
-    }
-  } else if (req.method === 'PUT') {
-    try {
-      const { room_id, doors } = req.body;
-      const client = await pool.connect();
+      const { structure_id, wubook_api_key } = req.body;
       
-      await client.query('DELETE FROM room_doors WHERE room_id = $1', [room_id]);
+      const rooms = await fetchRoomsFromWubook(wubook_api_key);
       
-      for (const door_id of doors) {
-        await client.query('INSERT INTO room_doors (room_id, door_id) VALUES ($1, $2)', [room_id, door_id]);
+      const client = await pool.connect();
+      for (const room of rooms) {
+        await client.query(
+          'INSERT INTO rooms (name, structure_id) VALUES ($1, $2) ON CONFLICT (name, structure_id) DO NOTHING',
+          [room.name, structure_id]
+        );
       }
-      
       client.release();
-      return res.status(200).json({ message: 'Associazione camera-porta aggiornata' });
+
+      return res.status(201).json({ message: 'Camere sincronizzate con successo' });
     } catch (error) {
-      console.error('Errore durante l'associazione delle porte alla camera:', error);
-      return res.status(500).json({ error: 'Errore durante l'associazione delle porte alla camera' });
+      console.error('Errore durante la sincronizzazione delle camere:', error);
+      return res.status(500).json({ error: 'Errore durante la sincronizzazione delle camere' });
     }
   } else {
     return res.status(405).json({ message: 'Metodo non consentito' });
