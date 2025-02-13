@@ -1,20 +1,23 @@
 import { useState, useEffect } from "react";
-import { Container, Tabs, Tab, Box } from "@mui/material";
-import Sidebar from "../components/Sidebar";
-import StructureConfig from "../components/StructureConfig";
-import RoomsConfig from "../components/RoomsConfig";
-import DoorsConfig from "../components/DoorsConfig";
-import IntegrationsConfig from "../components/IntegrationsConfig";
+import { Container, Typography, Box } from "@mui/material";
+import StructureSelector from "../components/StructureSelector";
+import BookingsTable from "../components/BookingsTable";
 import axios from "axios";
 
 export default function Dashboard() {
-  const [tab, setTab] = useState(0);
   const [structures, setStructures] = useState([]);
   const [selectedStructure, setSelectedStructure] = useState(null);
+  const [bookings, setBookings] = useState([]);
 
   useEffect(() => {
     fetchStructures();
   }, []);
+
+  useEffect(() => {
+    if (selectedStructure) {
+      fetchBookings(selectedStructure.id);
+    }
+  }, [selectedStructure]);
 
   const fetchStructures = async () => {
     try {
@@ -28,25 +31,20 @@ export default function Dashboard() {
     }
   };
 
-  return (
-    <Container maxWidth="xl" sx={{ display: "flex" }}>
-      <Sidebar setTab={setTab} />
-      <Box sx={{ flexGrow: 1, p: 4 }}>
-        <h1>Dashboard Manager</h1>
-        <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)} centered>
-          <Tab label="Gestione Struttura" />
-          <Tab label="Gestione Camere" disabled={!selectedStructure} />
-          <Tab label="Gestione Porte" disabled={!selectedStructure} />
-          <Tab label="Integrazioni" />
-        </Tabs>
+  const fetchBookings = async (structureId) => {
+    try {
+      const response = await axios.get(`/api/bookings?structure_id=${structureId}`);
+      setBookings(response.data);
+    } catch (error) {
+      console.error("Errore nel recupero delle prenotazioni:", error);
+    }
+  };
 
-        <Box sx={{ mt: 4 }}>
-          {tab === 0 && <StructureConfig onStructureSelect={setSelectedStructure} />}
-          {tab === 1 && selectedStructure && <RoomsConfig structure={selectedStructure} />}
-          {tab === 2 && selectedStructure && <DoorsConfig structure={selectedStructure} />}
-          {tab === 3 && <IntegrationsConfig />}
-        </Box>
-      </Box>
+  return (
+    <Container maxWidth="xl">
+      <Typography variant="h4">Dashboard Manager</Typography>
+      <StructureSelector structures={structures} onSelect={setSelectedStructure} />
+      {selectedStructure && <BookingsTable bookings={bookings} />}
     </Container>
   );
 }
