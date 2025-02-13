@@ -21,9 +21,9 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'POST') {
     try {
-      const { name, wubook_key } = req.body;
+      const { name, wubook_key, manager_id } = req.body;
       const client = await pool.connect();
-      await client.query('INSERT INTO structures (name, wubook_key) VALUES ($1, $2)', [name, wubook_key]);
+      await client.query('INSERT INTO structures (name, wubook_key, manager_id) VALUES ($1, $2, $3)', [name, wubook_key, manager_id]);
       client.release();
       return res.status(201).json({ message: 'Struttura aggiunta con successo' });
     } catch (error) {
