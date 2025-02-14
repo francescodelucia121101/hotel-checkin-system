@@ -6,7 +6,8 @@ export default function Dashboard() {
   const [selectedStructure, setSelectedStructure] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [filter, setFilter] = useState("");
 
   useEffect(() => {
     fetchStructures();
@@ -14,7 +15,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (selectedStructure) {
-      fetchBookings(selectedStructure.id, selectedStructure.wubook_key);
+      fetchBookings(selectedStructure.id);
     }
   }, [selectedStructure]);
 
@@ -26,20 +27,17 @@ export default function Dashboard() {
         setSelectedStructure(response.data[0]);
       }
     } catch (error) {
-      console.error("❌ Errore nel recupero delle strutture:", error);
-      setError("Errore nel recupero delle strutture");
+      console.error("Errore nel recupero delle strutture:", error);
     }
   };
 
-  const fetchBookings = async (structureId, apiKey) => {
+  const fetchBookings = async (structureId) => {
     try {
       setLoading(true);
-      await axios.post("/api/bookings", { wubook_api_key: apiKey });
       const response = await axios.get(`/api/bookings?structure_id=${structureId}`);
       setBookings(response.data);
     } catch (error) {
-      console.error("❌ Errore nel recupero delle prenotazioni:", error);
-      setError("Errore nel recupero delle prenotazioni");
+      console.error("Errore nel recupero delle prenotazioni:", error);
     } finally {
       setLoading(false);
     }
@@ -47,46 +45,49 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1>Dashboard</h1>
-      
+      <h1>Dashboard Prenotazioni</h1>
+
       <label>Seleziona Struttura:</label>
-      <select 
-        onChange={(e) => setSelectedStructure(structures.find(s => s.id === Number(e.target.value)))}
-        value={selectedStructure ? selectedStructure.id : ''}
-      >
+      <select onChange={(e) => setSelectedStructure(structures.find(s => s.id === Number(e.target.value)))}>
         {structures.map((structure) => (
           <option key={structure.id} value={structure.id}>{structure.name}</option>
         ))}
       </select>
 
-      {loading && <p>Caricamento...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <input 
+        type="text" 
+        placeholder="Filtra per nome o email..." 
+        value={filter} 
+        onChange={(e) => setFilter(e.target.value.toLowerCase())} 
+      />
 
-      <h2>Prossime Prenotazioni</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Ospite</th>
-            <th>Email</th>
-            <th>Data Check-in</th>
-            <th>Data Check-out</th>
-            <th>Stato</th>
-            <th>Codice Porta</th>
-          </tr>
-        </thead>
-        <tbody>
-          {bookings.map((booking, index) => (
-            <tr key={index}>
-              <td>{booking.guest_name}</td>
-              <td>{booking.guest_email}</td>
-              <td>{new Date(booking.checkin_date).toLocaleDateString()}</td>
-              <td>{new Date(booking.checkout_date).toLocaleDateString()}</td>
-              <td>{booking.status}</td>
-              <td>{booking.door_code || "N/A"}</td>
+      {loading ? <p>Caricamento...</p> : (
+        <table>
+          <thead>
+            <tr>
+              <th>Ospite</th>
+              <th>Email</th>
+              <th>Data Inizio</th>
+              <th>Data Fine</th>
+              <th>Stato</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {bookings.filter(b => 
+              b.guest_name.toLowerCase().includes(filter) || 
+              b.guest_email.toLowerCase().includes(filter)
+            ).map((booking, index) => (
+              <tr key={index} onClick={() => setSelectedBooking(booking)}>
+                <td>{booking.guest_name}</td>
+                <td>{booking.guest_email}</td>
+                <td>{booking.start_date}</td>
+                <td>{booking.end_date}</td>
+                <td>{booking.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
