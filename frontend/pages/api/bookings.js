@@ -7,7 +7,6 @@ export const config = {
   },
 };
 
-// Connessione al database PostgreSQL
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -16,25 +15,18 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-// Funzione per convertire le date da "dd/MM/yyyy" a "YYYY-MM-DD"
 const convertDate = (dateString) => {
   if (!dateString) return null;
   const [day, month, year] = dateString.split('/');
   return `${year}-${month}-${day}`;
 };
 
-// Funzione per recuperare prenotazioni da Wubook
 async function fetchBookingsFromWubook(apiKey) {
   try {
     const response = await axios.post(
       'https://kapi.wubook.net/kp/reservations/fetch_reservations',
-      {
-        from_date: new Date().toISOString().split('T')[0], // Data attuale
-        to_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0] // Un mese dopo
-      },
-      {
-        headers: { 'x-api-key': apiKey }
-      }
+      {},
+      { headers: { 'x-api-key': apiKey } }
     );
 
     return response.data.data.reservations || [];
@@ -44,7 +36,6 @@ async function fetchBookingsFromWubook(apiKey) {
   }
 }
 
-// API per gestire le prenotazioni
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
@@ -63,14 +54,17 @@ export default async function handler(req, res) {
 
       const client = await pool.connect();
       for (const booking of bookings) {
-        const guestName = booking.rooms[0]?.customers[0]?.name || "Ospite Sconosciuto";
-        const guestEmail = booking.rooms[0]?.customers[0]?.email || "email_sconosciuta@example.com";
         const roomId = booking.rooms[0]?.id_zak_room || null;
         const checkinDate = convertDate(booking.rooms[0]?.dfrom);
         const checkoutDate = convertDate(booking.rooms[0]?.dto);
         const status = booking.status || "Confirmed";
         const guestsCount = booking.rooms[0]?.occupancy?.adults || 1;
         const doorCode = booking.rooms[0]?.door_code || null;
+
+        // Verifica che i dati dell'ospite siano validi
+        const guest = booking.rooms[0]?.customers[0];
+        const guestName = guest?.name || "Ospite Sconosciuto";
+        const guestEmail = guest?.email && guest.email.includes('@') ? guest.email : "email_sconosciuta@example.com";
 
         if (!checkinDate || !checkoutDate) {
           console.error("❌ Data non valida per la prenotazione:", booking);
