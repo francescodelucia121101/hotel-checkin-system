@@ -9,6 +9,7 @@ export default function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
+    // ✅ Controlla se siamo nel client
     if (typeof window !== "undefined") {
       fetchBookings();
     }
