@@ -77,7 +77,7 @@ export default function Dashboard() {
               b.guest_name.toLowerCase().includes(filter) || 
               b.guest_email.toLowerCase().includes(filter)
             ).map((booking, index) => (
-              <tr key={index} onClick={() => setSelectedBooking(booking)}>
+              <tr key={index} onClick={() => setSelectedBooking(booking)} style={{ cursor: 'pointer' }}>
                 <td>{booking.guest_name}</td>
                 <td>{booking.guest_email}</td>
                 <td>{booking.start_date}</td>
@@ -87,6 +87,17 @@ export default function Dashboard() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {selectedBooking && (
+        <div>
+          <h2>Dettagli Prenotazione</h2>
+          <p>Ospite: {selectedBooking.guest_name}</p>
+          <p>Email: {selectedBooking.guest_email}</p>
+          <p>Check-in: {selectedBooking.start_date}</p>
+          <p>Check-out: {selectedBooking.end_date}</p>
+          <p>Stato: {selectedBooking.status}</p>
+        </div>
       )}
     </div>
   );
