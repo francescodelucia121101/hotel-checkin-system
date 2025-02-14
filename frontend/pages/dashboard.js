@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/router";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchBookings();
+    if (typeof window !== "undefined") {
+      fetchBookings();
+    }
   }, []);
 
   const fetchBookings = async () => {
@@ -31,8 +33,8 @@ export default function Dashboard() {
       {error && <p style={{ color: "red" }}>{error}</p>}
       <ul>
         {bookings.map((booking) => (
-          <li key={booking.id} onClick={() => navigate(`/booking/${booking.id}`)}>
-            {booking.guest_name} - {booking.start_date} → {booking.end_date}
+          <li key={booking.id} onClick={() => router.push(`/booking/${booking.id}`)}>
+            {booking.guest_name} - {booking.checkin_date} → {booking.checkout_date}
           </li>
         ))}
       </ul>
