@@ -72,6 +72,7 @@ export default async function handler(req, res) {
         const guestsCount = booking.rooms[0]?.occupancy?.adults || 1;
         const doorCode = booking.rooms[0]?.door_code || null;
 
+        // Assicuriamoci che le date siano valide
         if (!checkinDate || !checkoutDate) {
           console.error("❌ Data non valida per la prenotazione:", booking);
           continue; // Saltiamo questa prenotazione se la data è errata
@@ -79,10 +80,10 @@ export default async function handler(req, res) {
 
         await client.query(
           `INSERT INTO bookings 
-            (wubook_reservation_id, structure_id, room_id, guest_name, guest_email, guests_count, checkin_date, checkout_date, status, door_code) 
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+            (wubook_reservation_id, structure_id, room_id, guest_name, guest_email, guests_count, start_date, end_date, checkin_date, checkout_date, status, door_code) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
           ON CONFLICT (wubook_reservation_id) DO NOTHING`,
-          [booking.id, 1, roomId, guestName, guestEmail, guestsCount, checkinDate, checkoutDate, status, doorCode]
+          [booking.id, 1, roomId, guestName, guestEmail, guestsCount, checkinDate, checkoutDate, checkinDate, checkoutDate, status, doorCode]
         );
       }
       client.release();
@@ -103,7 +104,7 @@ export default async function handler(req, res) {
 
       const client = await pool.connect();
       const result = await client.query(
-        "SELECT * FROM bookings WHERE structure_id = $1 ORDER BY checkin_date ASC",
+        "SELECT * FROM bookings WHERE structure_id = $1 ORDER BY start_date ASC",
         [structure_id]
       );
       client.release();
