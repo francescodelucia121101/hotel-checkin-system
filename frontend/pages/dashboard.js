@@ -7,7 +7,7 @@ export default function Dashboard() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = useState("prossime");
 
   useEffect(() => {
     fetchStructures();
@@ -17,7 +17,7 @@ export default function Dashboard() {
     if (selectedStructure) {
       fetchBookings(selectedStructure.id);
     }
-  }, [selectedStructure]);
+  }, [selectedStructure, filter]);
 
   const fetchStructures = async () => {
     try {
@@ -34,7 +34,7 @@ export default function Dashboard() {
   const fetchBookings = async (structureId) => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/bookings?structure_id=${structureId}`);
+      const response = await axios.get(`/api/bookings?structure_id=${structureId}&filter=${filter}`);
       setBookings(response.data);
     } catch (error) {
       console.error("Errore nel recupero delle prenotazioni:", error);
@@ -54,12 +54,11 @@ export default function Dashboard() {
         ))}
       </select>
 
-      <input 
-        type="text" 
-        placeholder="Filtra per nome o email..." 
-        value={filter} 
-        onChange={(e) => setFilter(e.target.value.toLowerCase())} 
-      />
+      <label>Filtra Prenotazioni:</label>
+      <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+        <option value="prossime">Prossime</option>
+        <option value="passate">Passate</option>
+      </select>
 
       {loading ? <p>Caricamento...</p> : (
         <table>
@@ -73,10 +72,7 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {bookings.filter(b => 
-              b.guest_name.toLowerCase().includes(filter) || 
-              b.guest_email.toLowerCase().includes(filter)
-            ).map((booking, index) => (
+            {bookings.map((booking, index) => (
               <tr key={index} onClick={() => setSelectedBooking(booking)} style={{ cursor: 'pointer' }}>
                 <td>{booking.guest_name}</td>
                 <td>{booking.guest_email}</td>
@@ -87,17 +83,6 @@ export default function Dashboard() {
             ))}
           </tbody>
         </table>
-      )}
-
-      {selectedBooking && (
-        <div>
-          <h2>Dettagli Prenotazione</h2>
-          <p>Ospite: {selectedBooking.guest_name}</p>
-          <p>Email: {selectedBooking.guest_email}</p>
-          <p>Check-in: {selectedBooking.start_date}</p>
-          <p>Check-out: {selectedBooking.end_date}</p>
-          <p>Stato: {selectedBooking.status}</p>
-        </div>
       )}
     </div>
   );
