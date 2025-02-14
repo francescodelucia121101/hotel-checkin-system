@@ -1,4 +1,4 @@
-import "@/styles/globals.css"; // Importa gli stili globali
+import "../styles/globals.css"; // Importa gli stili globali
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
