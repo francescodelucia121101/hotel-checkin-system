@@ -1,5 +1,6 @@
-import { Pool } from 'pg';
-import axios from 'axios';
+import { Pool } from "pg";
+import axios from "axios";
+import cron from "node-cron";
 
 export const config = {
   api: {
@@ -17,42 +18,41 @@ const pool = new Pool({
 
 const convertDate = (dateString) => {
   if (!dateString) return null;
-  const [day, month, year] = dateString.split('/');
+  const [day, month, year] = dateString.split("/");
   return `${year}-${month}-${day}`;
 };
 
 async function fetchBookingsFromWubook(apiKey) {
   try {
+    const today = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + 20);
+
     const response = await axios.post(
-      'https://kapi.wubook.net/kp/reservations/fetch_reservations',
-      {},
-      { headers: { 'x-api-key': apiKey } }
+      "https://kapi.wubook.net/kp/reservations/fetch_reservations",
+      {
+        from_date: today.toISOString().split("T")[0], // Data odierna
+        to_date: futureDate.toISOString().split("T")[0], // Tra 20 giorni
+      },
+      { headers: { "x-api-key": apiKey } }
     );
 
     return response.data.data.reservations || [];
   } catch (error) {
-    console.error('❌ Errore nel recupero delle prenotazioni da Wubook:', error.response?.data || error.message);
+    console.error("❌ Errore nel recupero delle prenotazioni da Wubook:", error.response?.data || error.message);
     return [];
   }
 }
 
-export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    try {
-      console.log("📌 Body ricevuto:", req.body);
-      const { wubook_api_key } = req.body;
+async function syncBookings() {
+  console.log("🔄 Sincronizzazione automatica delle prenotazioni...");
+  const client = await pool.connect();
 
-      if (!wubook_api_key) {
-        return res.status(400).json({ error: 'API Key mancante' });
-      }
+  try {
+    const structures = await client.query("SELECT id, wubook_key FROM structures WHERE wubook_key IS NOT NULL");
+    for (const structure of structures.rows) {
+      const bookings = await fetchBookingsFromWubook(structure.wubook_key);
 
-      const bookings = await fetchBookingsFromWubook(wubook_api_key);
-
-      if (bookings.length === 0) {
-        return res.status(404).json({ error: 'Nessuna prenotazione trovata su Wubook' });
-      }
-
-      const client = await pool.connect();
       for (const booking of bookings) {
         const roomId = booking.rooms[0]?.id_zak_room || null;
         const checkinDate = convertDate(booking.rooms[0]?.dfrom);
@@ -61,10 +61,9 @@ export default async function handler(req, res) {
         const guestsCount = booking.rooms[0]?.occupancy?.adults || 1;
         const doorCode = booking.rooms[0]?.door_code || null;
 
-        // Verifica che i dati dell'ospite siano validi
         const guest = booking.rooms[0]?.customers[0];
         const guestName = guest?.name || "Ospite Sconosciuto";
-        const guestEmail = guest?.email && guest.email.includes('@') ? guest.email : "email_sconosciuta@example.com";
+        const guestEmail = guest?.email && guest.email.includes("@") ? guest.email : "email_sconosciuta@example.com";
 
         if (!checkinDate || !checkoutDate) {
           console.error("❌ Data non valida per la prenotazione:", booking);
@@ -76,30 +75,42 @@ export default async function handler(req, res) {
             (wubook_reservation_id, structure_id, room_id, guest_name, guest_email, guests_count, start_date, end_date, checkin_date, checkout_date, status, door_code) 
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
           ON CONFLICT (wubook_reservation_id) DO NOTHING`,
-          [booking.id, 1, roomId, guestName, guestEmail, guestsCount, checkinDate, checkoutDate, checkinDate, checkoutDate, status, doorCode]
+          [booking.id, structure.id, roomId, guestName, guestEmail, guestsCount, checkinDate, checkoutDate, checkinDate, checkoutDate, status, doorCode]
         );
       }
-      client.release();
-
-      return res.status(201).json({ message: "Prenotazioni sincronizzate con successo" });
-    } catch (error) {
-      console.error("❌ Errore durante la sincronizzazione delle prenotazioni:", error);
-      return res.status(500).json({ error: "Errore durante la sincronizzazione delle prenotazioni" });
     }
-  } 
-  else if (req.method === 'GET') {
+  } catch (error) {
+    console.error("❌ Errore durante la sincronizzazione automatica:", error);
+  } finally {
+    client.release();
+  }
+}
+
+// **Avvia il cron job per la sincronizzazione ogni 5 minuti**
+cron.schedule("*/5 * * * *", syncBookings);
+
+export default async function handler(req, res) {
+  if (req.method === "GET") {
     try {
-      const { structure_id } = req.query;
+      const { structure_id, filter } = req.query;
 
       if (!structure_id) {
         return res.status(400).json({ error: "Structure ID mancante" });
       }
 
+      let query = "SELECT * FROM bookings WHERE structure_id = $1";
+      let params = [structure_id];
+
+      if (filter === "prossime") {
+        query += " AND start_date >= CURRENT_DATE";
+      } else if (filter === "passate") {
+        query += " AND end_date < CURRENT_DATE";
+      }
+
+      query += " ORDER BY start_date ASC";
+
       const client = await pool.connect();
-      const result = await client.query(
-        "SELECT * FROM bookings WHERE structure_id = $1 ORDER BY start_date ASC",
-        [structure_id]
-      );
+      const result = await client.query(query, params);
       client.release();
 
       return res.status(200).json(result.rows);
@@ -107,8 +118,7 @@ export default async function handler(req, res) {
       console.error("❌ Errore nel recupero delle prenotazioni:", error);
       return res.status(500).json({ error: "Errore nel recupero delle prenotazioni" });
     }
-  } 
-  else {
+  } else {
     return res.status(405).json({ message: "Metodo non consentito" });
   }
 }
