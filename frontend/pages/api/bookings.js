@@ -63,19 +63,18 @@ export default async function handler(req, res) {
 
       const client = await pool.connect();
       for (const booking of bookings) {
-        const guestName = booking.id_human || "Ospite Sconosciuto";
-        const guestEmail = "email_sconosciuta@example.com";
+        const guestName = booking.rooms[0]?.customers[0]?.name || "Ospite Sconosciuto";
+        const guestEmail = booking.rooms[0]?.customers[0]?.email || "email_sconosciuta@example.com";
         const roomId = booking.rooms[0]?.id_zak_room || null;
-        const checkinDate = convertDate(booking.rooms[0]?.dfrom); // Convertiamo la data
-        const checkoutDate = convertDate(booking.rooms[0]?.dto); // Convertiamo la data
+        const checkinDate = convertDate(booking.rooms[0]?.dfrom);
+        const checkoutDate = convertDate(booking.rooms[0]?.dto);
         const status = booking.status || "Confirmed";
         const guestsCount = booking.rooms[0]?.occupancy?.adults || 1;
         const doorCode = booking.rooms[0]?.door_code || null;
 
-        // Assicuriamoci che le date siano valide
         if (!checkinDate || !checkoutDate) {
           console.error("❌ Data non valida per la prenotazione:", booking);
-          continue; // Saltiamo questa prenotazione se la data è errata
+          continue;
         }
 
         await client.query(
